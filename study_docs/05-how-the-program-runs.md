@@ -12,8 +12,8 @@ SELECT * FROM users WHERE id = 1;
 2. `process_input_line()`가 [parser.c](../src/parser.c)를 호출한다.
 3. `parse_select()`가 이 문장을 `Command` 구조체로 바꾼다.
 4. [executor.c](../src/executor.c)가 `execute_select()`를 호출한다.
-5. [storage.c](../src/storage.c)가 B-tree 인덱스로 `id = 1`의 파일 위치를 찾는다.
-6. 해당 한 줄만 CSV 파일에서 읽는다.
+5. 조건이 `id`면 [storage.c](../src/storage.c)가 B-tree 인덱스로 파일 위치를 찾고, 다른 컬럼이면 전체 행을 읽는다.
+6. 필요한 행을 찾아서 조건과 비교한다.
 7. 맞는 행을 [printer.c](../src/printer.c)로 출력한다.
 
 즉:

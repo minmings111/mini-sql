@@ -12,7 +12,7 @@
 - `WHERE id = 값` 조회용 B-tree 인덱스를 유지한다.
 - `INSERT`를 파싱하고 저장한다.
 - `SELECT`를 파싱하고 출력한다.
-- `WHERE id = value` 1개 조건을 지원한다.
+- `WHERE column = value` 1개 조건을 지원한다.
 
 ## 지원 SQL 범위
 ### INSERT

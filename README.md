@@ -16,7 +16,7 @@
 - 데이터 파일: [users.csv](data/users.csv)
 
 ## 발표용 요약
-이 프로젝트는 사용자가 CLI에서 MiniSQL 문장을 입력하면, 프로그램이 그 문장을 파싱해 명령 구조체로 바꾸고, 실행기에서 해당 명령을 처리한 뒤, CSV 파일에 저장하거나 파일에서 조회한 결과를 콘솔에 출력하는 구조로 동작한다. `WHERE id = 값` 조회는 메모리에 유지되는 B-tree 인덱스를 이용해 전체 파일 스캔 없이 한 행을 직접 찾는다.
+이 프로젝트는 사용자가 CLI에서 MiniSQL 문장을 입력하면, 프로그램이 그 문장을 파싱해 명령 구조체로 바꾸고, 실행기에서 해당 명령을 처리한 뒤, CSV 파일에 저장하거나 파일에서 조회한 결과를 콘솔에 출력하는 구조로 동작한다. `WHERE`는 `users` 테이블의 단일 컬럼 조건을 지원하며, 특히 `WHERE id = 값` 조회는 메모리에 유지되는 B-tree 인덱스를 이용해 전체 파일 스캔 없이 한 행을 직접 찾는다.
 
 즉, 작은 규모이지만 DB 처리기의 핵심 단계인 `Read -> Parse -> Execute -> Store -> Print`를 모두 직접 구현한 프로젝트라고 설명할 수 있다.
 
@@ -45,7 +45,7 @@
 6. 파싱이 성공하면 `process_input_line()`이 [executor.c](src/executor.c) 의 `execute_command()`를 호출한다.
 7. `execute_command()`는 명령 종류에 따라 `execute_insert()` 또는 `execute_select()`로 분기한다.
 8. `execute_insert()`는 `validate_insert_command()`로 값 개수와 숫자 필드를 검사한 뒤, [storage.c](src/storage.c) 의 `append_user_record()`를 호출한다.
-9. `execute_select()`는 `validate_select_command()` 후 `WHERE id = 값`이면 `read_user_row_by_id()`로 B-tree 인덱스를 사용하고, 전체 조회면 `read_all_users()`로 CSV를 동적 배열에 읽는다.
+9. `execute_select()`는 `validate_select_command()` 후 `WHERE id = 값`이면 `read_user_row_by_id()`로 B-tree 인덱스를 사용하고, 다른 컬럼 조건이나 전체 조회면 `read_all_users()`로 CSV를 동적 배열에 읽는다.
 10. 조회 결과는 [printer.c](src/printer.c) 의 `print_select_header()`, `print_user_row()`, `print_rows_selected()`로 출력되고, INSERT 성공 시에는 `print_message()`가 호출된다.
 
 ## 현재 구현 상태
@@ -55,8 +55,9 @@
 - `exit`, `quit`, EOF(`Ctrl + D`) 종료 지원
 - `INSERT INTO users VALUES (...)`
 - `SELECT * FROM users;`
-- `SELECT * FROM users WHERE id = ...;`
+- `SELECT * FROM users WHERE column = ...;`
 - 문자열 컬럼은 CSV 저장 시 큰따옴표로 저장
+- `WHERE`는 `users`의 단일 컬럼 조건을 지원
 - `WHERE id = 값` 조회에 in-memory B-tree 인덱스 사용
 - CSV row/field 일부를 동적 메모리로 관리
 - 기본 오류 메시지 체계 지원
@@ -113,5 +114,5 @@ MiniSQL> exit
 - `users` 테이블 하나만 지원
 - `INSERT`, `SELECT`만 지원
 - `WHERE`는 단일 조건만 지원
-- 1차 구현의 대표 조건은 `id = 값`
+- 1차 구현은 `users`의 단일 `WHERE column = value` 조건을 지원하고, `id` 조건은 인덱스로 최적화한다.
 - `UPDATE`, `DELETE`, `CREATE TABLE`, 복합 조건은 아직 지원하지 않음

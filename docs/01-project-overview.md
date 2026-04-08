@@ -19,7 +19,7 @@
 - 인터랙티브 CLI 입력 처리
 - `INSERT`
 - `SELECT`
-- 선택적 `WHERE id = value`
+- 선택적 `WHERE column = value`
 - 파일 기반 저장
 
 ### 제외

@@ -326,7 +326,7 @@ main.c
 - `id`는 사용자가 입력하지 않고 자동 증가로 생성한다.
 - `SELECT`는 `SELECT * FROM users;`만 허용한다.
 - `WHERE`는 1개 조건만 허용한다.
-- 1차 구현의 조건 비교는 `id = 값`부터 우선 지원한다.
+- 1차 구현의 조건 비교는 `users` 테이블의 단일 컬럼 `= 값` 형태를 지원한다.
 - CSV 저장 시 문자열 컬럼은 항상 큰따옴표로 저장한다.
 - CSV 저장 시 숫자 컬럼은 따옴표 없이 저장한다.
 - 긴 입력 버퍼와 일부 CSV 메모리는 `malloc`, `realloc`, `free`로 관리한다.
@@ -357,5 +357,5 @@ main.c
 - `quit` 입력 시 종료되는가
 - INSERT 후 `data/users.csv`에 행이 추가되는가
 - SELECT 시 전체 행이 출력되는가
-- `WHERE id = 1` 조건이 동작하는가
+- `WHERE id = 1`, `WHERE name = 'Kim'`, `WHERE age = 25` 조건이 동작하는가
 - 오류 입력 후에도 프로그램이 계속 실행되는가

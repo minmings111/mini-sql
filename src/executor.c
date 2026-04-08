@@ -10,6 +10,7 @@
 #include "utils.h"
 
 static int is_supported_table(const char *table);
+static int is_supported_where_column(const char *column);
 static ExecStatus validate_insert_command(const InsertCommand *insert_cmd);
 static ExecStatus validate_select_command(const SelectCommand *select_cmd);
 
@@ -58,7 +59,7 @@ ExecStatus execute_insert(const InsertCommand *insert_cmd) {
 
 ExecStatus execute_select(const SelectCommand *select_cmd) {
     /* SELECT는 조건이 id이면 B-tree 인덱스로 바로 찾고,
-       전체 조회면 CSV 전체를 동적 배열로 읽어 순회한다. */
+       다른 컬럼 조건이거나 전체 조회면 CSV 전체를 읽어 순회한다. */
     ExecStatus status;
     char *row = NULL;
     char *values[USER_COLUMN_COUNT] = {0};
@@ -82,7 +83,7 @@ ExecStatus execute_select(const SelectCommand *select_cmd) {
     fclose(fp);
 
     /* WHERE id = 값 형태는 B-tree 인덱스로 필요한 한 줄만 직접 찾는다. */
-    if (select_cmd->condition.has_condition) {
+    if (select_cmd->condition.has_condition && strcmp(select_cmd->condition.column, "id") == 0) {
         read_status = read_user_row_by_id(atoi(select_cmd->condition.value), &row);
         if (read_status < 0) {
             return EXEC_READ_FAILED;
@@ -105,7 +106,7 @@ ExecStatus execute_select(const SelectCommand *select_cmd) {
         return EXEC_OK;
     }
 
-    /* 전체 조회는 파일의 모든 행을 읽어와서 순서대로 출력한다. */
+    /* 전체 조회이거나 id 이외 컬럼 조건은 파일의 모든 행을 읽어 순회한다. */
     row_array.rows = NULL;
     row_array.count = 0;
     row_array.capacity = 0;
@@ -124,6 +125,12 @@ ExecStatus execute_select(const SelectCommand *select_cmd) {
     for (i = 0; i < row_array.count; i++) {
         if (split_csv_row(row_array.rows[i], values) != 0) {
             /* 손상된 줄은 무시하고 다음 줄로 넘어간다. */
+            free_csv_values(values);
+            continue;
+        }
+
+        /* WHERE가 있으면 현재 행이 조건과 맞는지 확인한다. */
+        if (select_cmd->condition.has_condition && !row_matches_condition(values, &select_cmd->condition)) {
             free_csv_values(values);
             continue;
         }
@@ -154,6 +161,19 @@ static int is_supported_table(const char *table) {
     return table != NULL && strcmp(table, "users") == 0;
 }
 
+static int is_supported_where_column(const char *column) {
+    if (column == NULL) {
+        return 0;
+    }
+
+    return strcmp(column, "id") == 0
+        || strcmp(column, "username") == 0
+        || strcmp(column, "name") == 0
+        || strcmp(column, "age") == 0
+        || strcmp(column, "phone") == 0
+        || strcmp(column, "email") == 0;
+}
+
 static ExecStatus validate_insert_command(const InsertCommand *insert_cmd) {
     /* 1차 구현에서는 users 테이블, 5개 사용자 입력 값,
        그리고 age 숫자 여부를 확인한다.
@@ -181,7 +201,7 @@ static ExecStatus validate_insert_command(const InsertCommand *insert_cmd) {
 }
 
 static ExecStatus validate_select_command(const SelectCommand *select_cmd) {
-    /* 1차 구현에서는 WHERE id = 값 형태만 지원한다. */
+    /* 1차 구현에서는 users 테이블의 단일 WHERE column = value 조건을 지원한다. */
     if (select_cmd == NULL) {
         return EXEC_UNSUPPORTED_SELECT_COLUMNS;
     }
@@ -192,14 +212,23 @@ static ExecStatus validate_select_command(const SelectCommand *select_cmd) {
 
     /* WHERE가 있다면 현재 범위 안의 조건인지 검사 */
     if (select_cmd->condition.has_condition) {
-        /* 1차 구현은 id 비교만 허용 */
-        if (strcmp(select_cmd->condition.column, "id") != 0) {
+        /* users의 고정 컬럼만 WHERE에서 허용한다. */
+        if (!is_supported_where_column(select_cmd->condition.column)) {
             return EXEC_UNSUPPORTED_WHERE_CONDITION;
         }
 
-        /* id 비교값은 숫자여야 한다. */
-        if (select_cmd->condition.value == NULL || !is_integer_string(select_cmd->condition.value)) {
+        if (select_cmd->condition.value == NULL) {
+            return EXEC_UNSUPPORTED_WHERE_CONDITION;
+        }
+
+        /* 숫자 컬럼인 id, age는 비교값도 숫자여야 한다. */
+        if (strcmp(select_cmd->condition.column, "id") == 0
+            && !is_integer_string(select_cmd->condition.value)) {
             return EXEC_INVALID_ID;
+        }
+        if (strcmp(select_cmd->condition.column, "age") == 0
+            && !is_integer_string(select_cmd->condition.value)) {
+            return EXEC_INVALID_AGE;
         }
     }
 

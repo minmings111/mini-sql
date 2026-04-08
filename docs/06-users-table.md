@@ -25,7 +25,7 @@
 - `username`, `name`, `phone`, `email`은 문자열로 사용한다.
 - 입력 MiniSQL의 값 순서는 항상 `username, name, age, phone, email` 순서라고 가정한다.
 - 실제 CSV 저장 순서는 `id, username, name, age, phone, email` 순서라고 가정한다.
-- `SELECT`의 `WHERE`는 우선 `id = 값` 형태부터 지원하는 것을 기본으로 생각한다.
+- `SELECT`의 `WHERE`는 `users` 테이블의 단일 컬럼 `= 값` 비교를 지원한다.
 
 ## 지원 SQL 예시
 ### INSERT

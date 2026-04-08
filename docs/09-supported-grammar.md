@@ -25,6 +25,8 @@
 ```sql
 SELECT * FROM users;
 SELECT * FROM users WHERE id = 1;
+SELECT * FROM users WHERE name = 'Kim';
+SELECT * FROM users WHERE age = 25;
 ```
 
 지원 범위:
@@ -33,7 +35,7 @@ SELECT * FROM users WHERE id = 1;
 - `WHERE`는 선택 사항
 - `WHERE`는 1개 조건만 지원
 - 1차 구현의 조건 비교는 `=`만 지원
-- 1차 구현의 대표 조건은 `id = 값`
+- `WHERE`는 `users` 테이블의 단일 컬럼 `= 값` 조건을 지원
 
 ### 지원 INSERT 형태
 ```sql
@@ -63,6 +65,7 @@ INSERT INTO users VALUES ('kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com'
 - 문자열 컬럼은 CSV 저장 시 항상 큰따옴표로 감싼다.
 - 숫자 컬럼은 CSV 저장 시 따옴표 없이 저장한다.
 - `WHERE id = 값` 조회는 실행 중 메모리에 유지되는 B-tree 인덱스를 사용한다.
+- `WHERE username`, `name`, `age`, `phone`, `email` 조건은 CSV 전체 스캔으로 처리한다.
 
 ### 메모리 규칙
 - 긴 입력 버퍼는 동적 메모리로 확장한다.

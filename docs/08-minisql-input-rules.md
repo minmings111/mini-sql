@@ -159,6 +159,8 @@ SELECT * FROM users;
 ### SELECT WHERE
 ```sql
 SELECT * FROM users WHERE id = 1;
+SELECT * FROM users WHERE name = 'Kim';
+SELECT * FROM users WHERE age = 25;
 ```
 
 ## 1차 구현에서 아직 지원하지 않는 것
