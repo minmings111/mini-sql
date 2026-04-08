@@ -11,6 +11,7 @@ static int append_field_separator(FILE *fp, int index);
 static int ensure_user_index_loaded(void);
 static int reset_user_index(void);
 static int rebuild_user_index(FILE *fp);
+static int get_next_user_id(int *next_id_out);
 static int read_dynamic_line(FILE *fp, char **line_out);
 static int append_row(RowArray *row_array, char *row);
 static char *duplicate_string(const char *value);
@@ -21,11 +22,17 @@ static int grow_buffer(char **buffer, size_t *capacity);
 static BTreeIndex g_user_index;
 static int g_index_loaded = 0;
 
+void storage_shutdown(void) {
+    /* 프로그램 종료 직전에 메모리 인덱스를 명시적으로 정리한다. */
+    btree_free(&g_user_index);
+    g_index_loaded = 0;
+}
+
 int append_user_record(const InsertCommand *insert_cmd) {
     /* INSERT 데이터를 CSV 한 줄로 바꿔 파일 끝에 추가한다.
-       쓰기 전에 B-tree 인덱스를 준비해 두고, append 후에는 새 id를 인덱스에도 반영한다. */
+       쓰기 전에 B-tree 인덱스를 준비해 두고,
+       새 id는 기존 최대 id + 1 규칙으로 자동 생성한다. */
     FILE *fp;
-    int i;
     long row_offset;
     int id;
     int status;
@@ -35,6 +42,10 @@ int append_user_record(const InsertCommand *insert_cmd) {
     }
 
     if (ensure_user_index_loaded() != 0) {
+        return -1;
+    }
+
+    if (get_next_user_id(&id) != 0) {
         return -1;
     }
 
@@ -53,21 +64,42 @@ int append_user_record(const InsertCommand *insert_cmd) {
         return -1;
     }
 
-    for (i = 0; i < USER_COLUMN_COUNT; i++) {
-        /* 첫 칼럼을 제외하고는 앞에 쉼표를 붙인다. */
-        if (append_field_separator(fp, i) != 0) {
-            fclose(fp);
-            return -1;
-        }
-
-        /* id, age는 숫자 컬럼이라 따옴표 없이 저장하고,
-           나머지 문자열 컬럼은 큰따옴표로 감싸서 저장한다. */
-        if (i == 0 || i == 3) {
-            write_csv_field(fp, insert_cmd->values[i], 0);
-        } else {
-            write_csv_field(fp, insert_cmd->values[i], 1);
-        }
+    /* 저장되는 실제 CSV 순서는 id, username, name, age, phone, email 이다. */
+    if (append_field_separator(fp, 0) != 0) {
+        fclose(fp);
+        return -1;
     }
+    fprintf(fp, "%d", id);
+
+    if (append_field_separator(fp, 1) != 0) {
+        fclose(fp);
+        return -1;
+    }
+    write_csv_field(fp, insert_cmd->values[0], 1);
+
+    if (append_field_separator(fp, 2) != 0) {
+        fclose(fp);
+        return -1;
+    }
+    write_csv_field(fp, insert_cmd->values[1], 1);
+
+    if (append_field_separator(fp, 3) != 0) {
+        fclose(fp);
+        return -1;
+    }
+    write_csv_field(fp, insert_cmd->values[2], 0);
+
+    if (append_field_separator(fp, 4) != 0) {
+        fclose(fp);
+        return -1;
+    }
+    write_csv_field(fp, insert_cmd->values[3], 1);
+
+    if (append_field_separator(fp, 5) != 0) {
+        fclose(fp);
+        return -1;
+    }
+    write_csv_field(fp, insert_cmd->values[4], 1);
 
     /* 한 행 기록이 끝났으므로 줄바꿈 추가 */
     if (fputc('\n', fp) == EOF) {
@@ -79,7 +111,6 @@ int append_user_record(const InsertCommand *insert_cmd) {
         return -1;
     }
 
-    id = atoi(insert_cmd->values[0]);
     status = btree_insert(&g_user_index, id, row_offset);
     if (status != 0) {
         return -1;
@@ -181,14 +212,6 @@ int read_user_row_by_id(int id, char **row_out) {
     }
 
     return 0;
-}
-
-int user_id_exists(int id) {
-    if (ensure_user_index_loaded() != 0) {
-        return -1;
-    }
-
-    return btree_search(&g_user_index, id, NULL);
 }
 
 int split_csv_row(const char *row, char *values[USER_COLUMN_COUNT]) {
@@ -472,6 +495,26 @@ static int rebuild_user_index(FILE *fp) {
             return -1;
         }
     }
+}
+
+static int get_next_user_id(int *next_id_out) {
+    int max_id;
+
+    if (next_id_out == NULL) {
+        return -1;
+    }
+
+    if (ensure_user_index_loaded() != 0) {
+        return -1;
+    }
+
+    if (!btree_get_max(&g_user_index, &max_id, NULL)) {
+        *next_id_out = 1;
+        return 0;
+    }
+
+    *next_id_out = max_id + 1;
+    return 0;
 }
 
 static int read_dynamic_line(FILE *fp, char **line_out) {

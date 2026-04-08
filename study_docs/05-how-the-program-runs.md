@@ -8,13 +8,13 @@ SELECT * FROM users WHERE id = 1;
 ```
 
 흐름:
-1. [repl.c](/home/leeminjeong/workspace/c_project/my_study/src/repl.c) 가 입력을 받는다.
-2. `process_input_line()`가 [parser.c](/home/leeminjeong/workspace/c_project/my_study/src/parser.c)를 호출한다.
+1. [repl.c](../src/repl.c) 가 입력을 받는다.
+2. `process_input_line()`가 [parser.c](../src/parser.c)를 호출한다.
 3. `parse_select()`가 이 문장을 `Command` 구조체로 바꾼다.
-4. [executor.c](/home/leeminjeong/workspace/c_project/my_study/src/executor.c)가 `execute_select()`를 호출한다.
-5. [storage.c](/home/leeminjeong/workspace/c_project/my_study/src/storage.c)가 CSV 파일을 읽는다.
-6. 각 행이 `id = 1` 조건에 맞는지 검사한다.
-7. 맞는 행을 [printer.c](/home/leeminjeong/workspace/c_project/my_study/src/printer.c)로 출력한다.
+4. [executor.c](../src/executor.c)가 `execute_select()`를 호출한다.
+5. [storage.c](../src/storage.c)가 B-tree 인덱스로 `id = 1`의 파일 위치를 찾는다.
+6. 해당 한 줄만 CSV 파일에서 읽는다.
+7. 맞는 행을 [printer.c](../src/printer.c)로 출력한다.
 
 즉:
 
@@ -24,16 +24,16 @@ SELECT * FROM users WHERE id = 1;
 예:
 
 ```sql
-INSERT INTO users VALUES (13, "hong13", "Hong", 26, "010-1313-1414", "hong@example.com");
+INSERT INTO users VALUES ("hong13", "Hong", 26, "010-1313-1414", "hong@example.com");
 ```
 
 흐름:
-1. [repl.c](/home/leeminjeong/workspace/c_project/my_study/src/repl.c) 가 입력을 받는다.
-2. [parser.c](/home/leeminjeong/workspace/c_project/my_study/src/parser.c) 가 `INSERT` 문장을 해석한다.
-3. 값 6개를 `InsertCommand` 구조체에 저장한다.
-4. [executor.c](/home/leeminjeong/workspace/c_project/my_study/src/executor.c) 가 값 개수와 숫자 타입을 검사한다.
-5. [storage.c](/home/leeminjeong/workspace/c_project/my_study/src/storage.c) 가 CSV 한 줄을 추가한다.
-6. [printer.c](/home/leeminjeong/workspace/c_project/my_study/src/printer.c) 가 `Inserted 1 row`를 출력한다.
+1. [repl.c](../src/repl.c) 가 입력을 받는다.
+2. [parser.c](../src/parser.c) 가 `INSERT` 문장을 해석한다.
+3. 값 5개를 `InsertCommand` 구조체에 저장한다.
+4. [executor.c](../src/executor.c) 가 값 개수와 숫자 타입을 검사한다.
+5. [storage.c](../src/storage.c) 가 새 `id`를 만든 뒤 CSV 한 줄을 추가한다.
+6. [printer.c](../src/printer.c) 가 `Inserted 1 row`를 출력한다.
 
 즉:
 

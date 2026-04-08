@@ -12,12 +12,12 @@
 - `WHERE id = 값` 조회용 B-tree 인덱스를 유지한다.
 - `INSERT`를 파싱하고 저장한다.
 - `SELECT`를 파싱하고 출력한다.
-- 가능하면 `WHERE col = value` 1개 조건을 지원한다.
+- `WHERE id = value` 1개 조건을 지원한다.
 
 ## 지원 SQL 범위
 ### INSERT
 ```sql
-INSERT INTO users VALUES (1, 'kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
+INSERT INTO users VALUES ('kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
 ```
 
 ### SELECT
@@ -42,7 +42,7 @@ SELECT * FROM users WHERE id = 1;
 9. `SELECT` 실행기를 만든다.
 10. `exit`, 빈 줄, 잘못된 입력 처리 규칙을 정리한다.
 
-세부 파일 구조와 함수 목록은 [파일 구조와 함수 설계](/home/leeminjeong/workspace/c_project/my_study/docs/07-file-structure-and-functions.md) 문서를 기준으로 한다.
+세부 파일 구조와 함수 목록은 [파일 구조와 함수 설계](07-file-structure-and-functions.md) 문서를 기준으로 한다.
 
 ## 구현 시 필요한 핵심 구조
 - `CommandType`
@@ -90,9 +90,9 @@ SELECT * FROM users WHERE id = 1;
 - 파싱 오류 시 오류 메시지를 출력하고 프롬프트를 유지한다.
 - EOF(`Ctrl + D`) 입력 시 조용히 종료한다.
 - 오류 메시지는 문법 오류, 지원 범위 오류, 값/타입 오류, 파일 입출력 오류로 구분한다.
-- 중복 `id`는 `duplicate id` 오류로 처리한다.
+- `id`는 사용자가 입력하지 않고 storage 단계에서 자동 증가로 생성한다.
 - 메모리 할당 실패는 `out of memory` 오류로 처리한다.
 - INSERT 성공 시 `Inserted 1 row`를 출력한다.
 - SELECT 결과가 없으면 `No rows found`를 출력한다.
 
-세부 규칙은 [MiniSQL 입력 규칙](/home/leeminjeong/workspace/c_project/my_study/docs/08-minisql-input-rules.md) 문서를 따른다.
+세부 규칙은 [MiniSQL 입력 규칙](08-minisql-input-rules.md) 문서를 따른다.

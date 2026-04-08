@@ -3,14 +3,14 @@
 ## 추천 순서
 이 프로젝트를 처음 읽는다면 아래 순서가 가장 편하다.
 
-1. [main.c](/home/leeminjeong/workspace/c_project/my_study/src/main.c)
-2. [repl.c](/home/leeminjeong/workspace/c_project/my_study/src/repl.c)
-3. [parser.c](/home/leeminjeong/workspace/c_project/my_study/src/parser.c)
-4. [executor.c](/home/leeminjeong/workspace/c_project/my_study/src/executor.c)
-5. [storage.c](/home/leeminjeong/workspace/c_project/my_study/src/storage.c)
-6. [printer.c](/home/leeminjeong/workspace/c_project/my_study/src/printer.c)
-7. [utils.c](/home/leeminjeong/workspace/c_project/my_study/src/utils.c)
-8. [types.h](/home/leeminjeong/workspace/c_project/my_study/include/types.h)
+1. [main.c](../src/main.c)
+2. [repl.c](../src/repl.c)
+3. [parser.c](../src/parser.c)
+4. [executor.c](../src/executor.c)
+5. [storage.c](../src/storage.c)
+6. [printer.c](../src/printer.c)
+7. [utils.c](../src/utils.c)
+8. [types.h](../include/types.h)
 
 ## 왜 이 순서가 좋은가
 ### 1. `main.c`

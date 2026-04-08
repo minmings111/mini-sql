@@ -2,7 +2,7 @@
 
 이 문서는 C를 처음 배우는 사람이 자주 헷갈리는 개념인 `stack`, `heap`, `static memory`를 이 프로젝트 코드와 연결해서 설명하기 위한 학습용 문서이다.
 
-![MiniSQL memory map](/home/leeminjeong/workspace/c_project/my_study/assets/minisql-memory-map.svg)
+![MiniSQL memory map](../assets/minisql-memory-map.svg)
 
 핵심 질문은 이것이다.
 
@@ -20,7 +20,7 @@
 ## 1. Stack이란?
 Stack은 보통 함수가 호출될 때 만들어지는 지역 변수 공간이라고 이해하면 된다.
 
-예를 들어 [repl.c](/home/leeminjeong/workspace/c_project/my_study/src/repl.c)의 `run_repl()` 안에는 이런 변수가 있다.
+예를 들어 [repl.c](../src/repl.c)의 `run_repl()` 안에는 이런 변수가 있다.
 
 - `char *line;`
 - `char *buffer;`
@@ -36,21 +36,21 @@ Stack은 보통 함수가 호출될 때 만들어지는 지역 변수 공간이�
 이라고 이해하면 된다.
 
 ## 2. 이 프로젝트에서 stack에 올라가는 대표 예시
-### [main.c](/home/leeminjeong/workspace/c_project/my_study/src/main.c)
+### [main.c](../src/main.c)
 - `main()` 자체는 지역 변수가 거의 없다.
 
-### [repl.c](/home/leeminjeong/workspace/c_project/my_study/src/repl.c)
+### [repl.c](../src/repl.c)
 - `line`
 - `buffer`
 - `collecting`
 - `command`, `parse_status`, `exec_status` 같은 지역 변수
 
-### [executor.c](/home/leeminjeong/workspace/c_project/my_study/src/executor.c)
+### [executor.c](../src/executor.c)
 - `row_array`
 - `matched_count`
 - `values`
 
-### [storage.c](/home/leeminjeong/workspace/c_project/my_study/src/storage.c)
+### [storage.c](../src/storage.c)
 - `buffer`
 - `column`
 - `row_offset`
@@ -90,12 +90,12 @@ free(name);
 ## 4. 이 프로젝트에서 heap은 어디에 쓰이나?
 이번 버전에서는 아래처럼 heap이 실제로 사용된다.
 
-- [repl.c](/home/leeminjeong/workspace/c_project/my_study/src/repl.c)
+- [repl.c](../src/repl.c)
   - `read_input_line()`이 긴 입력 문자열을 `malloc`/`realloc`으로 읽는다.
   - `append_input_line()`이 여러 줄 입력 버퍼를 `realloc`으로 늘린다.
-- [parser.c](/home/leeminjeong/workspace/c_project/my_study/src/parser.c)
+- [parser.c](../src/parser.c)
   - 각 값 문자열을 `malloc`으로 복사해서 `Command` 구조체에 넣는다.
-- [storage.c](/home/leeminjeong/workspace/c_project/my_study/src/storage.c)
+- [storage.c](../src/storage.c)
   - CSV 전체 조회 시 row 배열과 각 row 문자열을 동적으로 저장한다.
   - `split_csv_row()`가 각 칼럼 문자열을 동적으로 만든다.
 
@@ -142,7 +142,7 @@ Static memory는 프로그램이 시작될 때부터 끝날 때까지 유지되�
 
 이런 문자열 리터럴은 보통 static한 영역에 놓인다.
 
-또 [constants.h](/home/leeminjeong/workspace/c_project/my_study/include/constants.h)의 매크로를 통해 참조되는 프롬프트 문자열이나 파일 경로도 프로그램 전반에서 같은 의미로 사용된다.
+또 [constants.h](../include/constants.h)의 매크로를 통해 참조되는 프롬프트 문자열이나 파일 경로도 프로그램 전반에서 같은 의미로 사용된다.
 
 ## 6. 이 프로젝트에서 static memory로 생각하면 좋은 것들
 - `"MiniSQL> "` 같은 프롬프트 문자열
@@ -171,7 +171,7 @@ puts("Inserted 1 row");
 ## 8. 파일은 memory가 아니라 디스크에 있다
 중요한 점 하나 더 있다.
 
-[users.csv](/home/leeminjeong/workspace/c_project/my_study/data/users.csv)는 stack도 아니고 heap도 아니고 static memory도 아니다.  
+[users.csv](../data/users.csv)는 stack도 아니고 heap도 아니고 static memory도 아니다.  
 이 파일은 SSD/HDD 같은 저장장치에 존재한다.
 
 단, 파일을 읽는 순간:

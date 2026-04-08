@@ -19,7 +19,7 @@
 - 인터랙티브 CLI 입력 처리
 - `INSERT`
 - `SELECT`
-- 선택적 `WHERE col = value`
+- 선택적 `WHERE id = value`
 - 파일 기반 저장
 
 ### 제외
@@ -46,8 +46,8 @@
 ```text
 $ ./sql_processor
 MiniSQL> INSERT INTO users VALUES (
-...> 13, "hong13", "Hong",
-...> 26, "010-1313-1414", "hong@example.com"
+...> "hong13", "Hong", 26,
+...> "010-1313-1414", "hong@example.com"
 ...> );
 MiniSQL> SELECT * FROM users;
 MiniSQL> exit
@@ -73,4 +73,4 @@ MiniSQL> exit
 초기 구현 단순화를 위해 회원가입 시 생성되는 사용자 테이블이 이미 존재한다고 가정한다.
 즉, 1차 구현에서는 `users` 테이블만 지원한다.
 
-세부 컬럼 구조는 [하드코딩 테이블 정의](/home/leeminjeong/workspace/c_project/my_study/docs/06-users-table.md) 문서에서 관리한다.
+세부 컬럼 구조는 [하드코딩 테이블 정의](06-users-table.md) 문서에서 관리한다.

@@ -40,7 +40,9 @@ ParseStatus parse_command(const char *input, Command *command) {
 }
 
 ParseStatus parse_insert(const char *input, Command *command) {
-    /* INSERT INTO users VALUES (...) 형태를 순서대로 확인한다. */
+    /* INSERT INTO users VALUES (...) 형태를 순서대로 확인한다.
+       현재 VALUES 안에는 username, name, age, phone, email의
+       5개 사용자 입력 값만 들어오고, id는 나중에 자동 생성된다. */
     const char *cursor = input;
     ParseStatus status;
 
@@ -394,7 +396,7 @@ static ParseStatus parse_values_list(const char **input, InsertCommand *insert_c
 
     /* 쉼표를 기준으로 값들을 하나씩 읽는다. */
     while (*cursor != '\0' && *cursor != ')') {
-        if (index >= USER_COLUMN_COUNT) {
+        if (index >= USER_INPUT_VALUE_COUNT) {
             return PARSE_INVALID_INSERT;
         }
 

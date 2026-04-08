@@ -9,7 +9,7 @@
 예를 들어 다음과 같은 문장이 이번 과제의 MiniSQL 문장이다.
 
 ```sql
-INSERT INTO users VALUES (1, 'kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
+INSERT INTO users VALUES ('kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
 SELECT * FROM users WHERE id = 1;
 ```
 
@@ -59,13 +59,13 @@ MiniSQL 문장은 보통 다음 요소들로 이루어진다.
 ## 이번 과제에서 지원하는 MiniSQL 형태
 ### INSERT
 ```sql
-INSERT INTO users VALUES (1, 'kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
+INSERT INTO users VALUES ('kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
 ```
 
 구조:
 - 명령 종류: `INSERT`
 - 테이블명: `users`
-- 값 목록: `1`, `'kim01'`, `'Kim'`, `25`, `'010-1234-5678'`, `'kim@example.com'`
+- 값 목록: `'kim01'`, `'Kim'`, `25`, `'010-1234-5678'`, `'kim@example.com'`
 
 ### SELECT
 ```sql
@@ -112,4 +112,4 @@ SELECT * FROM users WHERE id = 1;
 
 이 프로젝트 문서에서는 혼동을 줄이기 위해 구현 대상 입력은 `MiniSQL`이라고 부른다.
 
-세부 입력 규칙은 [MiniSQL 입력 규칙](/home/leeminjeong/workspace/c_project/my_study/docs/08-minisql-input-rules.md) 문서를 기준으로 한다.
+세부 입력 규칙은 [MiniSQL 입력 규칙](08-minisql-input-rules.md) 문서를 기준으로 한다.

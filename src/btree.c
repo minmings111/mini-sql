@@ -7,6 +7,7 @@ static void btree_free_node(BTreeNode *node);
 static int btree_search_node(const BTreeNode *node, int key, long *value_out);
 static int btree_split_child(BTreeNode *parent, int index);
 static int btree_insert_nonfull(BTreeNode *node, int key, long value);
+static int btree_get_max_node(const BTreeNode *node, int *key_out, long *value_out);
 
 void btree_init(BTreeIndex *tree) {
     if (tree == NULL) {
@@ -78,6 +79,14 @@ int btree_insert(BTreeIndex *tree, int key, long value) {
     }
 
     return btree_insert_nonfull(root, key, value);
+}
+
+int btree_get_max(const BTreeIndex *tree, int *key_out, long *value_out) {
+    if (tree == NULL || tree->root == NULL) {
+        return 0;
+    }
+
+    return btree_get_max_node(tree->root, key_out, value_out);
 }
 
 static BTreeNode *btree_create_node(int is_leaf) {
@@ -206,4 +215,29 @@ static int btree_insert_nonfull(BTreeNode *node, int key, long value) {
     }
 
     return btree_insert_nonfull(node->children[i], key, value);
+}
+
+static int btree_get_max_node(const BTreeNode *node, int *key_out, long *value_out) {
+    const BTreeNode *cursor = node;
+
+    if (cursor == NULL) {
+        return 0;
+    }
+
+    while (!cursor->is_leaf) {
+        cursor = cursor->children[cursor->key_count];
+    }
+
+    if (cursor->key_count <= 0) {
+        return 0;
+    }
+
+    if (key_out != NULL) {
+        *key_out = cursor->keys[cursor->key_count - 1];
+    }
+    if (value_out != NULL) {
+        *value_out = cursor->values[cursor->key_count - 1];
+    }
+
+    return 1;
 }

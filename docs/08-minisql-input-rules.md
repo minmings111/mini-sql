@@ -127,10 +127,9 @@ MiniSQL>
 - `Error: unsupported WHERE condition`
 
 ### 값/타입 오류
-- `Error: INSERT expects 6 values`
+- `Error: INSERT expects 5 values`
 - `Error: invalid numeric value for id`
 - `Error: invalid numeric value for age`
-- `Error: duplicate id`
 
 ### 파일 입출력 오류
 - `Error: data file not found`
@@ -145,8 +144,12 @@ MiniSQL>
 ## 1차 구현에서 지원하는 MiniSQL 범위
 ### INSERT
 ```sql
-INSERT INTO users VALUES (1, 'kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
+INSERT INTO users VALUES ('kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
 ```
+
+설명:
+- 사용자는 `username`, `name`, `age`, `phone`, `email`의 5개 값만 입력한다.
+- `id`는 storage 단계에서 자동 증가로 생성된다.
 
 ### SELECT ALL
 ```sql

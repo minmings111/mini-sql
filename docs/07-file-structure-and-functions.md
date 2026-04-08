@@ -64,7 +64,9 @@ my_study/
 - `MAX_INPUT_LEN`
   - 예: `1024`
 - `MAX_VALUE_COUNT`
-  - 값: `6`
+  - 값: `5`
+- `USER_INPUT_VALUE_COUNT`
+  - 값: `5`
 - `USER_COLUMN_COUNT`
   - 값: `6`
 - `INITIAL_BUFFER_CAPACITY`
@@ -88,6 +90,10 @@ my_study/
 - `char table[32]`
 - `char *values[MAX_VALUE_COUNT]`
 - `int value_count`
+
+설명:
+- `values`에는 사용자가 입력한 `username`, `name`, `age`, `phone`, `email` 5개 값이 들어간다.
+- `id`는 이 구조체에 담기지 않고 storage 단계에서 자동 생성된다.
 
 ### `SelectCommand`
 - `char table[32]`
@@ -117,7 +123,6 @@ my_study/
 - `EXEC_INSERT_VALUE_COUNT_MISMATCH`
 - `EXEC_INVALID_ID`
 - `EXEC_INVALID_AGE`
-- `EXEC_DUPLICATE_ID`
 - `EXEC_DATA_FILE_NOT_FOUND`
 - `EXEC_READ_FAILED`
 - `EXEC_WRITE_FAILED`
@@ -130,11 +135,12 @@ my_study/
 - 프로그램 시작점
 - 최소 초기화
 - REPL 실행 함수 호출
+- 종료 전 전역 storage 자원 정리
 
 필요 함수:
 - `int main(void);`
   - 전체 프로그램 진입점
-  - `run_repl()` 호출 후 종료 코드 반환
+  - `run_repl()` 호출 후 `storage_shutdown()`으로 전역 인덱스 해제
 
 ### `src/repl.c`
 역할:
@@ -185,6 +191,7 @@ my_study/
 - `INSERT`와 `SELECT` 분기 처리
 - 값/타입 오류와 파일 관련 오류 처리
 - `id` 기반 B-tree 인덱스 경로와 전체 스캔 경로를 분기 처리
+- 자동 증가 `id` 생성 규칙에 맞는 INSERT 검증
 
 필요 함수:
 - `ExecStatus execute_command(const Command *command);`
@@ -204,13 +211,11 @@ my_study/
 
 필요 함수:
 - `int append_user_record(const InsertCommand *insert_cmd);`
-  - CSV 끝에 한 줄 추가
+  - 새 `id`를 자동 생성한 뒤 CSV 끝에 한 줄 추가
 - `int read_all_users(RowArray *row_array);`
   - 전체 행을 동적 배열로 읽기
 - `int read_user_row_by_id(int id, char **row_out);`
   - B-tree로 파일 오프셋을 찾아 한 줄만 읽기
-- `int user_id_exists(int id);`
-  - B-tree에 같은 id가 이미 있는지 확인
 - `int split_csv_row(const char *row, char *values[USER_COLUMN_COUNT]);`
   - CSV 한 줄을 큰따옴표 규칙을 고려해 컬럼별로 분리
 - `int row_matches_condition(char *const values[USER_COLUMN_COUNT], const Condition *condition);`
@@ -232,6 +237,7 @@ my_study/
 - `void btree_free(BTreeIndex *tree);`
 - `int btree_search(const BTreeIndex *tree, int key, long *value_out);`
 - `int btree_insert(BTreeIndex *tree, int key, long value);`
+- `int btree_get_max(const BTreeIndex *tree, int *key_out, long *value_out);`
 
 ### `src/printer.c`
 역할:
@@ -310,13 +316,14 @@ main.c
 - 키워드는 대소문자를 구분하지 않는다.
 - 세미콜론이 나올 때까지 REPL은 입력을 계속 누적한다.
 - 공백은 유연하게 허용한다.
-- `INSERT`는 값 6개가 정확히 들어와야 한다.
+- `INSERT`는 값 5개가 정확히 들어와야 한다.
 - 숫자는 따옴표 없이 입력한다.
 - 문자열은 작은따옴표 또는 큰따옴표로 감쌀 수 있다.
 - 문자열의 시작과 끝은 같은 종류의 따옴표여야 한다.
 - 문자열 내부 같은 종류의 따옴표는 1차 구현에서 지원하지 않는다.
 - 빈 문자열을 허용한다.
 - 문자열 내부 줄바꿈은 1차 구현에서 지원하지 않는다.
+- `id`는 사용자가 입력하지 않고 자동 증가로 생성한다.
 - `SELECT`는 `SELECT * FROM users;`만 허용한다.
 - `WHERE`는 1개 조건만 허용한다.
 - 1차 구현의 조건 비교는 `id = 값`부터 우선 지원한다.
@@ -332,7 +339,7 @@ main.c
 - 오류 메시지는 문법 오류, 지원 범위 오류, 값/타입 오류, 파일 입출력 오류로 구분한다.
 - INSERT 성공 시 `Inserted 1 row`를 출력한다.
 - SELECT 결과가 없으면 `No rows found`를 출력한다.
-- 중복 `id`는 오류로 처리한다.
+- 새 행의 `id`는 현재 최대 `id + 1` 규칙으로 자동 생성한다.
 
 ## 구현 순서 추천
 1. `constants.h`, `types.h`부터 만든다.

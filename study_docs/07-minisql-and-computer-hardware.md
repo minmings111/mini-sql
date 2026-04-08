@@ -2,7 +2,7 @@
 
 이 문서는 이 프로젝트를 "코드"만이 아니라, 실제 컴퓨터 부품과 연결해서 이해하기 위한 학습용 설명이다.
 
-![MiniSQL hardware flow](/home/leeminjeong/workspace/c_project/my_study/assets/minisql-hardware-flow.svg)
+![MiniSQL hardware flow](../assets/minisql-hardware-flow.svg)
 
 그림에서 특히 중요한 연결은 `SSD/HDD -> Example 박스`가 아니라, 정확히는 아래 흐름이다.
 
@@ -34,7 +34,7 @@
 
 - `repl.c`, `parser.c`, `executor.c`, `storage.c`, `printer.c`의 코드는 CPU가 실행한다.
 - 입력 문자열, 버퍼, 구조체, 배열은 RAM에 잠깐 저장된다.
-- [users.csv](/home/leeminjeong/workspace/c_project/my_study/data/users.csv)는 SSD/HDD에 저장된다.
+- [users.csv](../data/users.csv)는 SSD/HDD에 저장된다.
 
 ## 1. CPU는 이 프로젝트에서 무엇을 하나?
 CPU는 "C 코드를 실제 동작으로 바꾸는 역할"을 한다.
@@ -47,15 +47,15 @@ MiniSQL> SELECT * FROM users WHERE id = 1;
 
 를 입력하면 CPU는 대략 이런 일을 순서대로 한다.
 
-1. [main.c](/home/leeminjeong/workspace/c_project/my_study/src/main.c)의 `main()` 실행
-2. [repl.c](/home/leeminjeong/workspace/c_project/my_study/src/repl.c)의 `run_repl()` 실행
+1. [main.c](../src/main.c)의 `main()` 실행
+2. [repl.c](../src/repl.c)의 `run_repl()` 실행
 3. 입력을 읽고 문자열 정리
-4. [parser.c](/home/leeminjeong/workspace/c_project/my_study/src/parser.c)의 `parse_command()` 실행
+4. [parser.c](../src/parser.c)의 `parse_command()` 실행
 5. `SELECT` 문장인지 판단
-6. [executor.c](/home/leeminjeong/workspace/c_project/my_study/src/executor.c)의 `execute_select()` 실행
-7. [storage.c](/home/leeminjeong/workspace/c_project/my_study/src/storage.c)의 `read_all_users()` 실행
-8. 읽어온 데이터를 비교하고
-9. [printer.c](/home/leeminjeong/workspace/c_project/my_study/src/printer.c)로 출력
+6. [executor.c](../src/executor.c)의 `execute_select()` 실행
+7. [storage.c](../src/storage.c)의 `read_user_row_by_id()` 실행
+8. B-tree가 찾은 위치의 한 줄을 RAM으로 읽어오고
+9. [printer.c](../src/printer.c)로 출력
 
 즉 CPU는:
 
@@ -78,17 +78,17 @@ RAM은 "실행 중 잠깐 쓰는 작업 공간"이라고 보면 된다.
 - CSV 파일에서 읽어온 한 줄 데이터
 - `split_csv_row()`로 나눈 컬럼 값들
 
-예를 들어 [repl.c](/home/leeminjeong/workspace/c_project/my_study/src/repl.c)에는 이런 식의 변수가 있다.
+예를 들어 [repl.c](../src/repl.c)에는 이런 식의 변수가 있다.
 
-- `char line[MAX_INPUT_LEN];`
-- `char buffer[MAX_INPUT_LEN];`
+- `char *line;`
+- `char *buffer;`
 
 이 변수들은 실행 중 RAM에 만들어진다.
 
-[executor.c](/home/leeminjeong/workspace/c_project/my_study/src/executor.c) 쪽에서도:
+[executor.c](../src/executor.c) 쪽에서도:
 
-- `char rows[MAX_INPUT_LEN][MAX_INPUT_LEN];`
-- `char values[USER_COLUMN_COUNT][128];`
+- `RowArray row_array;`
+- `char *values[USER_COLUMN_COUNT];`
 
 같은 배열이 RAM에 올라간다.
 
@@ -102,7 +102,7 @@ SSD/HDD는 "전원이 꺼져도 남는 저장 공간"이다.
 
 이 프로젝트에서는 대표적으로:
 
-- [users.csv](/home/leeminjeong/workspace/c_project/my_study/data/users.csv)
+- [users.csv](../data/users.csv)
 
 가 SSD/HDD에 저장된다.
 
@@ -123,7 +123,7 @@ SSD/HDD는 "전원이 꺼져도 남는 저장 공간"이다.
 예를 들어 사용자가 아래 명령을 입력했다고 하자.
 
 ```sql
-INSERT INTO users VALUES (13, "hong13", "Hong", 26, "010-1313-1414", "hong@example.com");
+INSERT INTO users VALUES ("hong13", "Hong", 26, "010-1313-1414", "hong@example.com");
 ```
 
 이때 내부에서는 대략 이런 일이 일어난다.
@@ -133,7 +133,7 @@ INSERT INTO users VALUES (13, "hong13", "Hong", 26, "010-1313-1414", "hong@examp
 3. CPU가 `parse_insert()`를 실행해서 문장을 분석한다.
 4. 분석 결과가 `Command` 구조체에 담긴다.
 5. CPU가 `execute_insert()`를 실행한다.
-6. `append_user_record()`가 `users.csv` 파일을 연다.
+6. `append_user_record()`가 새 `id`를 자동 생성하고 `users.csv` 파일을 연다.
 7. 값들을 CSV 문자열 형태로 변환해서 SSD/HDD에 기록한다.
 8. `Inserted 1 row` 메시지를 화면에 출력한다.
 
@@ -154,11 +154,10 @@ SELECT * FROM users WHERE id = 1;
 1. 입력 문자열이 RAM에 저장된다.
 2. CPU가 `parse_select()`를 실행한다.
 3. `WHERE id = 1` 조건이 `Command` 구조체에 저장된다.
-4. `execute_select()`가 `users.csv`를 연다.
-5. 디스크에 있는 CSV 내용을 한 줄씩 RAM으로 읽어온다.
-6. `split_csv_row()`가 한 줄을 칼럼으로 나눈다.
-7. `row_matches_condition()`이 `id == 1`인지 비교한다.
-8. 맞는 행만 `print_user_row()`로 출력한다.
+4. `execute_select()`가 B-tree 인덱스로 `id = 1`의 파일 위치를 찾는다.
+5. `read_user_row_by_id()`가 디스크에 있는 CSV의 해당 한 줄만 RAM으로 읽어온다.
+6. `split_csv_row()`가 그 한 줄을 칼럼으로 나눈다.
+7. `print_user_row()`가 결과를 출력한다.
 
 즉 `SELECT`는:
 

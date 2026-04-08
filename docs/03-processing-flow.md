@@ -11,7 +11,7 @@ SQL 처리기는 다음 순서로 동작한다.
 6. 파싱 결과에 따라 실행한다.
 7. 결과를 출력한 뒤 다음 입력을 기다린다.
 
-입력 해석 규칙은 [MiniSQL 입력 규칙](/home/leeminjeong/workspace/c_project/my_study/docs/08-minisql-input-rules.md) 문서를 따른다.
+입력 해석 규칙은 [MiniSQL 입력 규칙](08-minisql-input-rules.md) 문서를 따른다.
 
 ## 단계별 설명
 ### 1. 입력
@@ -20,8 +20,8 @@ SQL 처리기는 다음 순서로 동작한다.
 ```text
 $ ./sql_processor
 MiniSQL> INSERT INTO users VALUES (
-...> 13, "hong13", "Hong",
-...> 26, "010-1313-1414", "hong@example.com"
+...> "hong13", "Hong", 26,
+...> "010-1313-1414", "hong@example.com"
 ...> );
 MiniSQL> SELECT * FROM users WHERE id = 1;
 MiniSQL> exit
@@ -76,9 +76,9 @@ MiniSQL> exit
 
 ## 최소 구현 흐름 예시
 ### INSERT
-1. `INSERT INTO users VALUES (1, 'kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');` 읽기
-2. `users` 테이블, 값 목록 `[1, kim01, Kim, 25, 010-1234-5678, kim@example.com]` 추출
-3. 저장소에 한 행 추가
+1. `INSERT INTO users VALUES ('kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');` 읽기
+2. `users` 테이블, 값 목록 `[kim01, Kim, 25, 010-1234-5678, kim@example.com]` 추출
+3. 저장소에 새 `id`를 붙여 한 행 추가
 4. 프롬프트로 돌아가 다음 입력을 기다림
 
 ### SELECT

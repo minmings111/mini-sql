@@ -3,7 +3,7 @@
 이 문서는 `B-tree`가 왜 필요한지, 그리고 이번 프로젝트에서 정확히 어디에 쓰이는지를 초보자 기준으로 설명한다.
 
 ## 1. B-tree가 없을 때는 어떻게 찾나?
-현재 CSV 파일은 [users.csv](/home/leeminjeong/workspace/c_project/my_study/data/users.csv)에 저장되어 있다.
+현재 CSV 파일은 [users.csv](../data/users.csv)에 저장되어 있다.
 
 만약 B-tree가 없다면:
 
@@ -42,9 +42,9 @@ B-tree는 `정렬된 검색용 자료구조`라고 생각하면 된다.
 ## 3. 이 프로젝트에서 B-tree는 어디에 있나?
 관련 코드는 아래에 있다.
 
-- [btree.c](/home/leeminjeong/workspace/c_project/my_study/src/btree.c)
-- [btree.h](/home/leeminjeong/workspace/c_project/my_study/include/btree.h)
-- [storage.c](/home/leeminjeong/workspace/c_project/my_study/src/storage.c)
+- [btree.c](../src/btree.c)
+- [btree.h](../include/btree.h)
+- [storage.c](../src/storage.c)
 
 역할은 이렇게 나뉜다.
 
@@ -57,7 +57,7 @@ B-tree는 `정렬된 검색용 자료구조`라고 생각하면 된다.
 
 ## 4. 실제로 어떤 함수가 연결되나?
 ### 프로그램 시작 또는 첫 조회 시
-[storage.c](/home/leeminjeong/workspace/c_project/my_study/src/storage.c)의 아래 흐름이 동작한다.
+[storage.c](../src/storage.c)의 아래 흐름이 동작한다.
 
 - `ensure_user_index_loaded()`
 - `rebuild_user_index()`
@@ -74,9 +74,9 @@ B-tree는 `정렬된 검색용 자료구조`라고 생각하면 된다.
 ### `SELECT * FROM users WHERE id = 14;`
 이때는:
 
-- [executor.c](/home/leeminjeong/workspace/c_project/my_study/src/executor.c)의 `execute_select()`
-- [storage.c](/home/leeminjeong/workspace/c_project/my_study/src/storage.c)의 `read_user_row_by_id()`
-- [btree.c](/home/leeminjeong/workspace/c_project/my_study/src/btree.c)의 `btree_search()`
+- [executor.c](../src/executor.c)의 `execute_select()`
+- [storage.c](../src/storage.c)의 `read_user_row_by_id()`
+- [btree.c](../src/btree.c)의 `btree_search()`
 
 가 이어진다.
 
@@ -90,7 +90,7 @@ B-tree는 `정렬된 검색용 자료구조`라고 생각하면 된다.
 6. `print_user_row()`로 출력
 
 ## 5. INSERT할 때는 왜 B-tree도 같이 업데이트해야 하나?
-새 행을 CSV 끝에 추가한 뒤에는, 그 행의 `id`와 파일 위치도 B-tree에 바로 넣어야 한다.
+새 행을 CSV 끝에 추가한 뒤에는, 자동 생성된 `id`와 파일 위치도 B-tree에 바로 넣어야 한다.
 
 그래야 다음 `SELECT * FROM users WHERE id = 새값;` 에서 전체 파일을 다시 훑지 않고도 찾을 수 있다.
 
@@ -105,7 +105,7 @@ B-tree는 `정렬된 검색용 자료구조`라고 생각하면 된다.
 하는 절충형 방식을 쓴다.
 
 ## 7. 그럼 `users.idx`는 뭐야?
-[users.idx](/home/leeminjeong/workspace/c_project/my_study/data/users.idx)는
+[users.idx](../data/users.idx)는
 "이 프로젝트가 B-tree 인덱스를 사용한다"는 것을 보여주는 안내용 파일이다.
 
 즉 현재 버전은:

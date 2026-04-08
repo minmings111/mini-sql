@@ -181,16 +181,13 @@ static void print_exec_error(ExecStatus status) {
             puts("Error: unsupported WHERE condition");
             break;
         case EXEC_INSERT_VALUE_COUNT_MISMATCH:
-            puts("Error: INSERT expects 6 values");
+            puts("Error: INSERT expects 5 values");
             break;
         case EXEC_INVALID_ID:
             puts("Error: invalid numeric value for id");
             break;
         case EXEC_INVALID_AGE:
             puts("Error: invalid numeric value for age");
-            break;
-        case EXEC_DUPLICATE_ID:
-            puts("Error: duplicate id");
             break;
         case EXEC_DATA_FILE_NOT_FOUND:
             puts("Error: data file not found");

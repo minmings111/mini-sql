@@ -9,9 +9,9 @@
 우리가 직접 작성하는 실제 구현 코드가 들어 있다.
 
 예:
-- [main.c](/home/leeminjeong/workspace/c_project/my_study/src/main.c)
-- [repl.c](/home/leeminjeong/workspace/c_project/my_study/src/repl.c)
-- [parser.c](/home/leeminjeong/workspace/c_project/my_study/src/parser.c)
+- [main.c](../src/main.c)
+- [repl.c](../src/repl.c)
+- [parser.c](../src/parser.c)
 
 쉽게 말하면:
 - `.c` 파일 = 실제 일을 하는 코드
@@ -26,14 +26,14 @@
 - enum 정의
 - 상수 정의
 
-예를 들어 [repl.h](/home/leeminjeong/workspace/c_project/my_study/include/repl.h)에 이런 코드가 있다.
+예를 들어 [repl.h](../include/repl.h)에 이런 코드가 있다.
 
 ```c
 int run_repl(void);
 ```
 
 이건 "`run_repl`라는 함수가 있다"는 약속이다.
-실제 구현은 [repl.c](/home/leeminjeong/workspace/c_project/my_study/src/repl.c)에 있다.
+실제 구현은 [repl.c](../src/repl.c)에 있다.
 
 쉽게 말하면:
 - `.h` 파일 = 인터페이스, 사용 설명서, 약속서
@@ -104,8 +104,8 @@ make
 ## 7. 지금 너가 집중해서 봐야 할 것
 처음 공부할 때는 아래만 보면 충분하다.
 
-- [src](/home/leeminjeong/workspace/c_project/my_study/src/main.c) 안의 `.c` 파일
-- [include](/home/leeminjeong/workspace/c_project/my_study/include/types.h) 안의 `.h` 파일
+- [src](../src/main.c) 안의 `.c` 파일
+- [include](../include/types.h) 안의 `.h` 파일
 
 `.o` 파일은 지금 단계에서는 굳이 이해하지 않아도 된다.
 컴파일할 때 자동으로 생기는 중간 파일이라고만 생각해도 충분하다.

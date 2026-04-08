@@ -4,15 +4,15 @@
 문서는 "개념 이해 -> 시스템 설계 -> 구현 준비" 순서로 읽을 수 있게 구성한다.
 
 ## 문서 목록
-1. [프로젝트 개요와 범위](/home/leeminjeong/workspace/c_project/my_study/docs/01-project-overview.md)
-2. [MiniSQL 문법 기초](/home/leeminjeong/workspace/c_project/my_study/docs/02-sql-basics.md)
-3. [처리 흐름 설계](/home/leeminjeong/workspace/c_project/my_study/docs/03-processing-flow.md)
-4. [저장 포맷 설계](/home/leeminjeong/workspace/c_project/my_study/docs/04-storage-design.md)
-5. [구현 계획](/home/leeminjeong/workspace/c_project/my_study/docs/05-implementation-plan.md)
-6. [하드코딩 테이블 정의](/home/leeminjeong/workspace/c_project/my_study/docs/06-users-table.md)
-7. [파일 구조와 함수 설계](/home/leeminjeong/workspace/c_project/my_study/docs/07-file-structure-and-functions.md)
-8. [MiniSQL 입력 규칙](/home/leeminjeong/workspace/c_project/my_study/docs/08-minisql-input-rules.md)
-9. [지원/미지원 문법 요약](/home/leeminjeong/workspace/c_project/my_study/docs/09-supported-grammar.md)
+1. [프로젝트 개요와 범위](01-project-overview.md)
+2. [MiniSQL 문법 기초](02-sql-basics.md)
+3. [처리 흐름 설계](03-processing-flow.md)
+4. [저장 포맷 설계](04-storage-design.md)
+5. [구현 계획](05-implementation-plan.md)
+6. [하드코딩 테이블 정의](06-users-table.md)
+7. [파일 구조와 함수 설계](07-file-structure-and-functions.md)
+8. [MiniSQL 입력 규칙](08-minisql-input-rules.md)
+9. [지원/미지원 문법 요약](09-supported-grammar.md)
 
 ## 읽는 순서 추천
 1. 과제 범위를 먼저 확인한다.

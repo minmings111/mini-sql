@@ -17,8 +17,8 @@
 예:
 
 ```text
-1,kim01,Kim,25,010-1234-5678,kim@example.com
-2,lee02,Lee,21,010-2222-3333,lee@example.com
+1,"kim01","Kim",25,"010-1234-5678","kim@example.com"
+2,"lee02","Lee",21,"010-2222-3333","lee@example.com"
 ```
 
 ### 장점
@@ -60,7 +60,7 @@
 
 예:
 - 입력 MiniSQL
-  - `INSERT INTO users VALUES (1, 'kim01', "Kim, Min", 25, '010-1234-5678', "kim@example.com");`
+  - `INSERT INTO users VALUES ('kim01', "Kim, Min", 25, '010-1234-5678', "kim@example.com");`
 - 저장 CSV
   - `1,"kim01","Kim, Min",25,"010-1234-5678","kim@example.com"`
 
@@ -91,7 +91,7 @@ CSV 파일 자체는 텍스트 저장 포맷이므로 모든 값은 파일 수�
 - 인덱스의 실제 자료구조는 메모리 안의 B-tree이다.
 - B-tree에는 `id`와 해당 행의 CSV 파일 오프셋(`ftell` 위치)을 저장한다.
 - 프로그램 시작 시 `users.csv`를 한 번 스캔해서 B-tree를 재구성한다.
-- `INSERT` 시 CSV 파일 끝에 새 행을 추가한 직후, 같은 `id`와 파일 오프셋을 B-tree에도 삽입한다.
+- `INSERT` 시에는 현재 최대 `id`보다 1 큰 값을 자동 생성한 뒤, CSV 파일 끝에 새 행을 추가하고 같은 `id`와 파일 오프셋을 B-tree에도 삽입한다.
 - `SELECT * FROM users WHERE id = 값;` 는 B-tree로 먼저 위치를 찾은 뒤, 해당 한 줄만 파일에서 읽는다.
 - `data/users.idx` 파일은 인덱스 사용 여부를 설명하는 안내용 파일이며, 실제 검색 자료구조는 메모리에 유지된다.
 

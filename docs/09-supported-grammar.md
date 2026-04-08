@@ -37,13 +37,14 @@ SELECT * FROM users WHERE id = 1;
 
 ### 지원 INSERT 형태
 ```sql
-INSERT INTO users VALUES (1, 'kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
+INSERT INTO users VALUES ('kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
 ```
 
 지원 범위:
 - `INSERT INTO users VALUES (...)`
-- 값은 정확히 6개 필요
-- 값 순서는 `id, username, name, age, phone, email`
+- 값은 정확히 5개 필요
+- 입력 순서는 `username, name, age, phone, email`
+- 실제 저장 시 `id`는 자동 증가로 생성된다
 
 ### 키워드/기호 규칙
 - 키워드는 대소문자를 구분하지 않는다.
@@ -100,7 +101,7 @@ SELECT * FROM users WHERE name LIKE 'Kim%';
 
 예:
 ```sql
-INSERT INTO users VALUES (1, 'O'Brien', 'Kim', 25, '010-1234-5678', 'kim@example.com');
+INSERT INTO users VALUES ('O'Brien', 'Kim', 25, '010-1234-5678', 'kim@example.com');
 ```
 
 ### 테이블 확장
@@ -126,8 +127,8 @@ SELECT * FROM users WHERE age > 20;
 
 ### 값/타입 오류
 ```sql
-INSERT INTO users VALUES ('one', 'kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
-INSERT INTO users VALUES (1, 'kim01', 'Kim');
+INSERT INTO users VALUES ('kim01', 'Kim', 'twenty', '010-1234-5678', 'kim@example.com');
+INSERT INTO users VALUES ('kim01', 'Kim');
 ```
 
 ## 요약

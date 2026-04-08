@@ -155,9 +155,9 @@ static int is_supported_table(const char *table) {
 }
 
 static ExecStatus validate_insert_command(const InsertCommand *insert_cmd) {
-    int id_exists;
-
-    /* 1차 구현에서는 users 테이블, 6개 값, id/age 숫자 여부를 확인한다. */
+    /* 1차 구현에서는 users 테이블, 5개 사용자 입력 값,
+       그리고 age 숫자 여부를 확인한다.
+       id는 storage 단계에서 자동 증가로 생성한다. */
     if (insert_cmd == NULL) {
         return EXEC_INSERT_VALUE_COUNT_MISMATCH;
     }
@@ -167,27 +167,14 @@ static ExecStatus validate_insert_command(const InsertCommand *insert_cmd) {
         return EXEC_UNSUPPORTED_TABLE;
     }
 
-    /* users는 6개 칼럼 고정 */
-    if (insert_cmd->value_count != USER_COLUMN_COUNT) {
+    /* 사용자는 username, name, age, phone, email의 5개 값만 입력한다. */
+    if (insert_cmd->value_count != USER_INPUT_VALUE_COUNT) {
         return EXEC_INSERT_VALUE_COUNT_MISMATCH;
     }
 
-    /* id는 숫자 */
-    if (insert_cmd->values[0] == NULL || !is_integer_string(insert_cmd->values[0])) {
-        return EXEC_INVALID_ID;
-    }
-
     /* age도 숫자 */
-    if (insert_cmd->values[3] == NULL || !is_integer_string(insert_cmd->values[3])) {
+    if (insert_cmd->values[2] == NULL || !is_integer_string(insert_cmd->values[2])) {
         return EXEC_INVALID_AGE;
-    }
-
-    id_exists = user_id_exists(atoi(insert_cmd->values[0]));
-    if (id_exists < 0) {
-        return EXEC_MEMORY_ERROR;
-    }
-    if (id_exists > 0) {
-        return EXEC_DUPLICATE_ID;
     }
 
     return EXEC_OK;

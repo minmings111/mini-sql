@@ -20,16 +20,17 @@
 | `email` | 이메일 주소 | `'kim@example.com'` |
 
 ## 기본 규칙
-- `id`는 정수형 값으로 사용한다.
+- `id`는 정수형 값으로 사용하며, 사용자가 직접 입력하지 않고 INSERT 시 자동 증가로 생성한다.
 - `age`는 정수형 값으로 사용한다.
 - `username`, `name`, `phone`, `email`은 문자열로 사용한다.
-- `INSERT`의 값 순서는 항상 `id, username, name, age, phone, email` 순서라고 가정한다.
+- 입력 MiniSQL의 값 순서는 항상 `username, name, age, phone, email` 순서라고 가정한다.
+- 실제 CSV 저장 순서는 `id, username, name, age, phone, email` 순서라고 가정한다.
 - `SELECT`의 `WHERE`는 우선 `id = 값` 형태부터 지원하는 것을 기본으로 생각한다.
 
 ## 지원 SQL 예시
 ### INSERT
 ```sql
-INSERT INTO users VALUES (1, 'kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
+INSERT INTO users VALUES ('kim01', 'Kim', 25, '010-1234-5678', 'kim@example.com');
 ```
 
 ### SELECT ALL
@@ -48,8 +49,8 @@ $ ./sql_processor
 MiniSQL> SELECT * FROM users;
 MiniSQL> SELECT * FROM users WHERE id = 1;
 MiniSQL> INSERT INTO users VALUES (
-...> 13, "hong13", "Hong",
-...> 26, "010-1313-1414", "hong@example.com"
+...> "hong13", "Hong", 26,
+...> "010-1313-1414", "hong@example.com"
 ...> );
 MiniSQL> exit
 ```

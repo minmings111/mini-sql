@@ -38,14 +38,14 @@ char table[32];
 
 ## 4. 구조체(struct)
 관련 파일:
-- [types.h](/home/leeminjeong/workspace/c_project/my_study/include/types.h)
+- [types.h](../include/types.h)
 
 예:
 
 ```c
 typedef struct {
     char table[32];
-    char values[USER_COLUMN_COUNT][128];
+    char *values[MAX_VALUE_COUNT];
     int value_count;
 } InsertCommand;
 ```
@@ -98,7 +98,7 @@ REPL의 입력 루프는 `while`로 만든다.
 
 ## 8. 파일 입출력
 관련 파일:
-- [storage.c](/home/leeminjeong/workspace/c_project/my_study/src/storage.c)
+- [storage.c](../src/storage.c)
 
 주요 함수:
 - `fopen`
@@ -121,7 +121,7 @@ REPL의 입력 루프는 `while`로 만든다.
 
 ## 10. 헤더 파일
 관련 폴더:
-- [include](/home/leeminjeong/workspace/c_project/my_study/include/constants.h)
+- [include](../include/constants.h)
 
 `.h` 파일은
 - 함수 선언

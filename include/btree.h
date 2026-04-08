@@ -21,5 +21,6 @@ void btree_init(BTreeIndex *tree);
 void btree_free(BTreeIndex *tree);
 int btree_search(const BTreeIndex *tree, int key, long *value_out);
 int btree_insert(BTreeIndex *tree, int key, long value);
+int btree_get_max(const BTreeIndex *tree, int *key_out, long *value_out);
 
 #endif
