@@ -105,6 +105,38 @@ Error: invalid SELECT syntax
 MiniSQL>
 ```
 
+## 1차 오류 메시지 정책
+1차 구현에서는 오류 메시지를 아래 범주로 구분한다.
+
+### 문법 오류
+- `Error: missing semicolon`
+- `Error: unsupported command`
+- `Error: invalid INSERT syntax`
+- `Error: invalid SELECT syntax`
+- `Error: invalid WHERE syntax`
+- `Error: unterminated string literal`
+- `Error: unsupported quoted string format`
+
+### 지원 범위 오류
+- `Error: unsupported table`
+- `Error: unsupported SELECT columns`
+- `Error: unsupported WHERE condition`
+
+### 값/타입 오류
+- `Error: INSERT expects 6 values`
+- `Error: invalid numeric value for id`
+- `Error: invalid numeric value for age`
+
+### 파일 입출력 오류
+- `Error: data file not found`
+- `Error: failed to read data file`
+- `Error: failed to write data file`
+
+## 정상 메시지 정책
+- INSERT 성공 시: `Inserted 1 row`
+- SELECT 결과가 0건일 때: `No rows found`
+- SELECT 결과가 있으면 행을 출력하고, 필요하면 마지막에 선택된 행 수를 출력할 수 있다.
+
 ## 1차 구현에서 지원하는 MiniSQL 범위
 ### INSERT
 ```sql

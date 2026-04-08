@@ -55,6 +55,9 @@ SELECT * FROM users WHERE id = 1;
 - SELECT 전체 조회가 되는지 확인
 - WHERE 조건이 정확히 적용되는지 확인
 - 잘못된 MiniSQL 문장에 대해 오류가 나는지 확인
+- 세미콜론 누락 오류가 출력되는지 확인
+- 값 개수 불일치 오류가 출력되는지 확인
+- 숫자 타입 오류가 출력되는지 확인
 - 존재하지 않는 테이블 또는 파일 처리 확인
 - `exit` 입력 시 정상 종료되는지 확인
 - 빈 줄 입력 시 프롬프트가 유지되는지 확인
@@ -82,5 +85,8 @@ SELECT * FROM users WHERE id = 1;
 - 빈 줄 입력은 조용히 무시한다.
 - 파싱 오류 시 오류 메시지를 출력하고 프롬프트를 유지한다.
 - EOF(`Ctrl + D`) 입력 시 조용히 종료한다.
+- 오류 메시지는 문법 오류, 지원 범위 오류, 값/타입 오류, 파일 입출력 오류로 구분한다.
+- INSERT 성공 시 `Inserted 1 row`를 출력한다.
+- SELECT 결과가 없으면 `No rows found`를 출력한다.
 
 세부 규칙은 [MiniSQL 입력 규칙](/home/leeminjeong/workspace/c_project/my_study/docs/08-minisql-input-rules.md) 문서를 따른다.

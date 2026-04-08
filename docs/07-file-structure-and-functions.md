@@ -110,6 +110,7 @@ my_study/
 - 빈 줄 무시
 - `exit`, `quit`, EOF 처리
 - 파서와 실행기 연결
+- 오류 메시지 출력 후 프롬프트 유지
 
 필요 함수:
 - `int run_repl(void);`
@@ -124,6 +125,7 @@ my_study/
 역할:
 - MiniSQL 문자열을 내부 `Command` 구조체로 변환
 - `INSERT`, `SELECT`, `exit`, `quit` 구분
+- 문법 오류와 일부 지원 범위 오류 판정
 
 필요 함수:
 - `int parse_command(const char *input, Command *command);`
@@ -141,6 +143,7 @@ my_study/
 역할:
 - 파싱된 명령을 실제 동작으로 연결
 - `INSERT`와 `SELECT` 분기 처리
+- 값/타입 오류와 파일 관련 오류 처리
 
 필요 함수:
 - `int execute_command(const Command *command);`
@@ -171,12 +174,15 @@ my_study/
 ### `src/printer.c`
 역할:
 - SELECT 결과 출력 형식 담당
+- 성공/오류 메시지 출력 담당
 
 필요 함수:
 - `void print_user_row(const char values[USER_COLUMN_COUNT][128]);`
   - 사용자 한 행 출력
 - `void print_select_header(void);`
   - 컬럼명 출력 여부를 통제
+- `void print_rows_selected(int count);`
+  - 선택된 행 수 출력
 - `void print_message(const char *message);`
   - 일반 안내 메시지 출력
 - `void print_error(const char *message);`
@@ -252,6 +258,9 @@ main.c
 - 파싱 오류 시 오류 메시지를 출력하고 프롬프트를 유지한다.
 - `exit`, `quit` 입력 시 종료한다.
 - EOF(`Ctrl + D`) 입력 시 조용히 종료한다.
+- 오류 메시지는 문법 오류, 지원 범위 오류, 값/타입 오류, 파일 입출력 오류로 구분한다.
+- INSERT 성공 시 `Inserted 1 row`를 출력한다.
+- SELECT 결과가 없으면 `No rows found`를 출력한다.
 
 ## 구현 순서 추천
 1. `constants.h`, `types.h`부터 만든다.
