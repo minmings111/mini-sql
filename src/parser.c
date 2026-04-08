@@ -15,9 +15,14 @@ static ParseStatus parse_value_token(const char **input, char **out_value);
 static ParseStatus parse_values_list(const char **input, InsertCommand *insert_cmd);
 static char *duplicate_range(const char *start, size_t len);
 
+/* parse_command()는 parser의 진입점이다.
+   사용자가 입력한 한 문장을 보고 INSERT인지 SELECT인지 먼저 구분한 뒤,
+   맞는 세부 parser 함수로 보내는 역할을 한다. */
 ParseStatus parse_command(const char *input, Command *command) {
     /* parser의 시작점:
        입력 문자열이 INSERT인지 SELECT인지 먼저 판별한다. */
+    /* cursor는 input 문자열 안에서
+       "지금 어디까지 읽었는지"를 가리키는 포인터다. */
     const char *cursor;
 
     if (input == NULL || command == NULL) {
@@ -39,11 +44,18 @@ ParseStatus parse_command(const char *input, Command *command) {
     return PARSE_UNSUPPORTED_COMMAND;
 }
 
+/* parse_insert()는
+   INSERT INTO users VALUES (...) 형태를 구조체로 바꾸는 함수다. */
 ParseStatus parse_insert(const char *input, Command *command) {
     /* INSERT INTO users VALUES (...) 형태를 순서대로 확인한다.
        현재 VALUES 안에는 username, name, age, phone, email의
        5개 사용자 입력 값만 들어오고, id는 나중에 자동 생성된다. */
+    /* cursor는 INSERT 문장을 왼쪽부터 읽어 가면서
+       현재 해석 위치를 계속 앞으로 옮기는 데 사용한다. */
     const char *cursor = input;
+    /* status는 아래에서 parse_values_list() 같은 하위 parser를 호출했을 때
+       그 결과가 성공(PARSE_OK)인지, 아니면 어떤 파싱 오류인지
+       잠깐 저장해 두는 상태 변수다. */
     ParseStatus status;
 
     /* INSERT 키워드 확인 */
@@ -60,6 +72,7 @@ ParseStatus parse_insert(const char *input, Command *command) {
     if (!parse_identifier_token(&cursor, command->insert_cmd.table, sizeof(command->insert_cmd.table))) {
         return PARSE_INVALID_INSERT;
     }
+    /* 성공하면 table 이름이 insert_cmd.table 안으로 복사된다. */
 
     /* VALUES 키워드 확인 */
     if (!match_keyword(&cursor, "VALUES")) {
@@ -102,8 +115,11 @@ ParseStatus parse_insert(const char *input, Command *command) {
     return PARSE_OK;
 }
 
+/* parse_select()는
+   SELECT * FROM users [WHERE column = value]; 형태를 해석한다. */
 ParseStatus parse_select(const char *input, Command *command) {
     /* 1차 구현에서는 SELECT * FROM users [WHERE ...]; 만 허용한다. */
+    /* SELECT도 같은 방식으로 cursor를 조금씩 앞으로 옮기며 해석한다. */
     const char *cursor = input;
     ParseStatus status;
 
@@ -143,6 +159,7 @@ ParseStatus parse_select(const char *input, Command *command) {
         }
     } else {
         /* WHERE가 없으면 전체 조회 */
+        /* has_condition = 0 이면 executor는 조건 없는 SELECT로 처리한다. */
         command->select_cmd.condition.has_condition = 0;
     }
 
@@ -161,8 +178,11 @@ ParseStatus parse_select(const char *input, Command *command) {
     return PARSE_OK;
 }
 
+/* parse_condition()은 WHERE 절만 따로 읽어서
+   column, value, has_condition 정보를 Condition 구조체에 채운다. */
 ParseStatus parse_condition(const char *input, Condition *condition) {
     /* WHERE column = value 형태만 해석한다. */
+    /* cursor는 WHERE 절 안에서 column, =, value를 차례대로 읽는다. */
     const char *cursor = input;
     ParseStatus status;
 
@@ -179,6 +199,7 @@ ParseStatus parse_condition(const char *input, Condition *condition) {
     if (!parse_identifier_token(&cursor, condition->column, sizeof(condition->column))) {
         return PARSE_INVALID_WHERE;
     }
+    /* 성공하면 condition->column 안에 id, name 같은 컬럼명이 저장된다. */
 
     cursor = skip_spaces(cursor);
     /* 1차 구현은 = 비교만 지원 */
@@ -200,9 +221,13 @@ ParseStatus parse_condition(const char *input, Condition *condition) {
     }
 
     condition->has_condition = 1;
+    /* has_condition을 1로 바꾸는 순간부터
+       executor는 이 SELECT를 "조건 있는 조회"로 해석한다. */
     return PARSE_OK;
 }
 
+/* init_command()는 Command 구조체를 사용하기 전에
+   안전한 초기 상태로 만드는 함수다. */
 void init_command(Command *command) {
     if (command == NULL) {
         return;
@@ -213,6 +238,8 @@ void init_command(Command *command) {
     command->type = CMD_INVALID;
 }
 
+/* free_command()는 parser가 malloc 해 둔 문자열들을
+   Command 사용이 끝난 뒤 한 번에 정리하는 함수다. */
 void free_command(Command *command) {
     int i;
 
@@ -221,15 +248,20 @@ void free_command(Command *command) {
     }
 
     for (i = 0; i < MAX_VALUE_COUNT; i++) {
+        /* parse_value_token()이 만든 문자열 메모리를
+           command 사용이 끝난 시점에 하나씩 해제한다. */
         free(command->insert_cmd.values[i]);
         command->insert_cmd.values[i] = NULL;
     }
 
+    /* WHERE 비교값도 heap에 있을 수 있으므로 함께 정리한다. */
     free(command->select_cmd.condition.value);
     command->select_cmd.condition.value = NULL;
     command->select_cmd.condition.has_condition = 0;
 }
 
+/* skip_spaces()는 parser가 다음 토큰을 읽기 전에
+   앞쪽 공백을 건너뛰기 위해 사용하는 helper 함수다. */
 static const char *skip_spaces(const char *s) {
     /* parser 안에서는 공백을 많이 건너뛰므로 작은 helper로 분리했다. */
     while (s != NULL && *s != '\0' && isspace((unsigned char) *s)) {
@@ -238,6 +270,9 @@ static const char *skip_spaces(const char *s) {
     return s;
 }
 
+/* match_keyword()는 현재 위치에서
+   INSERT, SELECT, FROM 같은 예약어가 정확히 오는지 검사하고,
+   성공하면 input 포인터를 그 뒤로 이동시킨다. */
 static int match_keyword(const char **input, const char *keyword) {
     /* 키워드는 대소문자를 구분하지 않고 비교한다.
        예: SELECT, select, SeLeCt 모두 허용 */
@@ -268,9 +303,12 @@ static int match_keyword(const char **input, const char *keyword) {
     return 1;
 }
 
+/* parse_identifier_token()은 users, id, username 같은 식별자 한 개를 읽어
+   목적 버퍼 dest에 복사하는 함수다. */
 static int parse_identifier_token(const char **input, char *dest, size_t dest_size) {
     /* users, id 같은 식별자를 읽어오는 함수다. */
     const char *cursor;
+    /* len은 지금까지 식별자에 복사한 글자 수다. */
     size_t len = 0;
 
     if (input == NULL || *input == NULL || dest == NULL || dest_size == 0) {
@@ -299,13 +337,19 @@ static int parse_identifier_token(const char **input, char *dest, size_t dest_si
     return 1;
 }
 
+/* parse_value_token()은 VALUES(...)나 WHERE 값 자리에서
+   숫자 또는 따옴표 문자열 한 개를 읽어 heap 문자열로 만들어 돌려준다. */
 static ParseStatus parse_value_token(const char **input, char **out_value) {
     /* 값 하나를 읽는다.
        - 숫자: 123
        - 문자열: 'Kim' 또는 "Kim" */
+    /* cursor는 현재 읽는 위치,
+       start는 값이 실제로 시작한 위치를 기억한다. */
     const char *cursor;
     const char *start;
+    /* len은 start부터 cursor 전까지 몇 글자를 읽었는지 센다. */
     size_t len = 0;
+    /* quote는 문자열이 ' 로 시작했는지 " 로 시작했는지 기억한다. */
     char quote = '\0';
     char *copy;
 
@@ -343,6 +387,7 @@ static ParseStatus parse_value_token(const char **input, char **out_value) {
         if (copy == NULL) {
             return PARSE_OUT_OF_MEMORY;
         }
+        /* copy는 이제 command 구조체 안에 오래 보관할 실제 문자열 메모리다. */
 
         cursor++;
         cursor = skip_spaces(cursor);
@@ -380,10 +425,14 @@ static ParseStatus parse_value_token(const char **input, char **out_value) {
     return PARSE_OK;
 }
 
+/* parse_values_list()는 INSERT VALUES 괄호 안에서
+   쉼표로 구분된 여러 값을 순서대로 읽어 InsertCommand 안에 채운다. */
 static ParseStatus parse_values_list(const char **input, InsertCommand *insert_cmd) {
     /* INSERT 안의 값 목록을 , 기준으로 여러 개 읽는다. */
     const char *cursor = *input;
     ParseStatus status;
+    /* index는 지금 몇 번째 값을 읽는지 나타낸다.
+       username=0, name=1, age=2 ... 식으로 대응된다. */
     int index = 0;
 
     cursor = skip_spaces(cursor);
@@ -406,6 +455,7 @@ static ParseStatus parse_values_list(const char **input, InsertCommand *insert_c
         }
 
         index++;
+        /* 값 하나를 성공적으로 읽었으므로 다음 칸으로 이동한다. */
         cursor = skip_spaces(cursor);
 
         /* 닫는 괄호를 만나면 값 목록이 끝난다. */
@@ -433,6 +483,8 @@ static ParseStatus parse_values_list(const char **input, InsertCommand *insert_c
     return PARSE_OK;
 }
 
+/* duplicate_range()는 입력 문자열의 일부 구간만 잘라
+   새 heap 문자열로 복사해 두고 싶을 때 사용하는 helper다. */
 static char *duplicate_range(const char *start, size_t len) {
     char *copy;
 
