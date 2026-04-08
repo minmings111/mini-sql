@@ -57,6 +57,7 @@ ExecStatus execute_select(const SelectCommand *select_cmd) {
     int matched_count = 0;
     char values[USER_COLUMN_COUNT][128];
     FILE *fp;
+    int header_printed = 0;
 
     status = validate_select_command(select_cmd);
     if (status != EXEC_OK) {
@@ -78,14 +79,16 @@ ExecStatus execute_select(const SelectCommand *select_cmd) {
         return EXEC_NO_ROWS_FOUND;
     }
 
-    print_select_header();
-
     for (i = 0; i < row_count; i++) {
         if (split_csv_row(rows[i], values) != 0) {
             continue;
         }
 
         if (!select_cmd->condition.has_condition || row_matches_condition(values, &select_cmd->condition)) {
+            if (!header_printed) {
+                print_select_header();
+                header_printed = 1;
+            }
             print_user_row(values);
             matched_count++;
         }

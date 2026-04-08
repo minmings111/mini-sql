@@ -43,6 +43,7 @@ MiniSQL> exit
 
 ## 문서 안내
 - [문서 인덱스](/home/leeminjeong/workspace/c_project/my_study/docs/README.md)
+- [학습 문서 인덱스](/home/leeminjeong/workspace/c_project/my_study/study_docs/README.md)
 - [프로젝트 개요와 범위](/home/leeminjeong/workspace/c_project/my_study/docs/01-project-overview.md)
 - [MiniSQL 문법 기초](/home/leeminjeong/workspace/c_project/my_study/docs/02-sql-basics.md)
 - [처리 흐름 설계](/home/leeminjeong/workspace/c_project/my_study/docs/03-processing-flow.md)

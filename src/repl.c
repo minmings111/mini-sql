@@ -37,7 +37,7 @@ int run_repl(void) {
             continue;
         }
 
-        if (!collecting && is_exit_command(line)) {
+        if (is_exit_command(line)) {
             return 0;
         }
 
