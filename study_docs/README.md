@@ -9,6 +9,9 @@
 3. [파일별 역할 설명](/home/leeminjeong/workspace/c_project/my_study/study_docs/03-file-by-file-guide.md)
 4. [핵심 C 문법 정리](/home/leeminjeong/workspace/c_project/my_study/study_docs/04-c-basics-used-here.md)
 5. [INSERT와 SELECT가 실제로 어떻게 동작하는가](/home/leeminjeong/workspace/c_project/my_study/study_docs/05-how-the-program-runs.md)
+6. [파일 확장자와 빌드 산출물 이해하기](/home/leeminjeong/workspace/c_project/my_study/study_docs/06-file-extensions-explained.md)
+7. [MiniSQL을 CPU / RAM / SSD 관점에서 이해하기](/home/leeminjeong/workspace/c_project/my_study/study_docs/07-minisql-and-computer-hardware.md)
+8. [Stack / Heap / Static Memory를 이 프로젝트로 이해하기](/home/leeminjeong/workspace/c_project/my_study/study_docs/08-stack-heap-static-memory.md)
 
 ## 이 문서들의 목표
 - 이 프로젝트가 어떤 단계로 움직이는지 이해하기
