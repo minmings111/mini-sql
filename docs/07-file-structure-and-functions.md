@@ -1,0 +1,273 @@
+# 파일 구조와 함수 설계
+
+## 목적
+이 문서는 실제 C 프로젝트를 구현할 때 사용할 폴더 구조와 파일별 함수 책임을 구체적으로 정리한다.
+즉, 이 문서를 기준으로 하면 구현자는 어떤 파일을 만들고 어떤 함수를 어디에 둘지 바로 결정할 수 있다.
+
+## 권장 프로젝트 구조
+```text
+my_study/
+├── README.md
+├── Makefile
+├── data/
+│   └── users.csv
+├── docs/
+│   ├── 01-project-overview.md
+│   ├── 02-sql-basics.md
+│   ├── 03-processing-flow.md
+│   ├── 04-storage-design.md
+│   ├── 05-implementation-plan.md
+│   ├── 06-users-table.md
+│   └── 07-file-structure-and-functions.md
+├── include/
+│   ├── constants.h
+│   ├── types.h
+│   ├── repl.h
+│   ├── parser.h
+│   ├── executor.h
+│   ├── storage.h
+│   ├── printer.h
+│   └── utils.h
+└── src/
+    ├── main.c
+    ├── repl.c
+    ├── parser.c
+    ├── executor.c
+    ├── storage.c
+    ├── printer.c
+    └── utils.c
+```
+
+## 폴더별 역할
+### `data/`
+- 실제 사용자 데이터 CSV 파일을 저장한다.
+- 1차 구현에서는 `users.csv` 하나만 사용한다.
+
+### `include/`
+- 여러 `.c` 파일에서 공유하는 구조체, 상수, 함수 선언을 둔다.
+
+### `src/`
+- 실제 로직 구현 파일을 둔다.
+
+## 핵심 상수
+`constants.h`에서 아래 상수를 관리한다.
+
+- `DATA_FILE_PATH`
+  - 값: `"data/users.csv"`
+- `PROMPT_TEXT`
+  - 값: `"MiniSQL> "`
+- `MAX_INPUT_LEN`
+  - 예: `1024`
+- `MAX_VALUE_COUNT`
+  - 값: `6`
+- `USER_COLUMN_COUNT`
+  - 값: `6`
+
+## 핵심 구조체
+`types.h`에는 아래 구조체와 enum을 둔다.
+
+### `CommandType`
+- `CMD_INSERT`
+- `CMD_SELECT`
+- `CMD_EXIT`
+- `CMD_INVALID`
+
+### `Condition`
+- `char column[32]`
+- `char value[128]`
+- `int has_condition`
+
+### `InsertCommand`
+- `char table[32]`
+- `char values[USER_COLUMN_COUNT][128]`
+- `int value_count`
+
+### `SelectCommand`
+- `char table[32]`
+- `Condition condition`
+
+### `Command`
+- `CommandType type`
+- `InsertCommand insert_cmd`
+- `SelectCommand select_cmd`
+
+## 파일별 함수 설계
+### `src/main.c`
+역할:
+- 프로그램 시작점
+- 최소 초기화
+- REPL 실행 함수 호출
+
+필요 함수:
+- `int main(void);`
+  - 전체 프로그램 진입점
+  - `run_repl()` 호출 후 종료 코드 반환
+
+### `src/repl.c`
+역할:
+- `MiniSQL> ` 프롬프트 출력
+- 반복 입력 루프 실행
+- 빈 줄 무시
+- `exit`, `quit`, EOF 처리
+- 파서와 실행기 연결
+
+필요 함수:
+- `int run_repl(void);`
+  - REPL 전체 루프 실행
+- `int process_input_line(const char *line);`
+  - 한 줄 입력을 파싱하고 실행기로 전달
+  - 성공/실패에 따라 메시지 출력
+- `int is_exit_command(const char *line);`
+  - `exit`, `quit` 여부 확인
+
+### `src/parser.c`
+역할:
+- MiniSQL 문자열을 내부 `Command` 구조체로 변환
+- `INSERT`, `SELECT`, `exit`, `quit` 구분
+
+필요 함수:
+- `int parse_command(const char *input, Command *command);`
+  - 입력 문자열 전체를 파싱
+- `int parse_insert(const char *input, Command *command);`
+  - INSERT 문장 파싱
+- `int parse_select(const char *input, Command *command);`
+  - SELECT 문장 파싱
+- `int parse_condition(const char *input, Condition *condition);`
+  - WHERE 절 파싱
+- `void init_command(Command *command);`
+  - 구조체 초기화
+
+### `src/executor.c`
+역할:
+- 파싱된 명령을 실제 동작으로 연결
+- `INSERT`와 `SELECT` 분기 처리
+
+필요 함수:
+- `int execute_command(const Command *command);`
+  - 명령 종류에 따라 분기
+- `int execute_insert(const InsertCommand *insert_cmd);`
+  - 저장소에 새 레코드 추가
+- `int execute_select(const SelectCommand *select_cmd);`
+  - 저장소 조회 후 출력
+
+### `src/storage.c`
+역할:
+- `data/users.csv` 파일 읽기/쓰기
+- CSV quoting 규칙에 맞는 한 줄 append
+- 전체 데이터 순회
+
+필요 함수:
+- `int append_user_record(const InsertCommand *insert_cmd);`
+  - CSV 끝에 한 줄 추가
+- `int read_all_users(char rows[][MAX_INPUT_LEN], int *row_count);`
+  - 전체 행을 메모리로 읽기
+- `int split_csv_row(const char *row, char values[USER_COLUMN_COUNT][128]);`
+  - CSV 한 줄을 큰따옴표 규칙을 고려해 컬럼별로 분리
+- `int row_matches_condition(const char values[USER_COLUMN_COUNT][128], const Condition *condition);`
+  - WHERE 조건 일치 여부 확인
+- `void write_csv_field(FILE *fp, const char *value, int quote);`
+  - 문자열 컬럼이면 큰따옴표를 붙여 CSV 필드 저장
+
+### `src/printer.c`
+역할:
+- SELECT 결과 출력 형식 담당
+
+필요 함수:
+- `void print_user_row(const char values[USER_COLUMN_COUNT][128]);`
+  - 사용자 한 행 출력
+- `void print_select_header(void);`
+  - 컬럼명 출력 여부를 통제
+- `void print_message(const char *message);`
+  - 일반 안내 메시지 출력
+- `void print_error(const char *message);`
+  - 오류 메시지 출력
+
+### `src/utils.c`
+역할:
+- 문자열 전처리 보조 함수
+- 공백 제거, 줄바꿈 제거, 따옴표 제거
+
+필요 함수:
+- `void trim_newline(char *str);`
+- `void trim_spaces(char *str);`
+- `void strip_matching_quotes(char *str);`
+- `int starts_with_ignore_case(const char *str, const char *prefix);`
+- `int is_quoted_string(const char *str);`
+
+## 헤더 파일 역할
+### `include/repl.h`
+- `run_repl` 관련 선언
+
+### `include/parser.h`
+- `parse_command` 관련 선언
+
+### `include/executor.h`
+- `execute_command` 관련 선언
+
+### `include/storage.h`
+- CSV 읽기/쓰기 함수 선언
+
+### `include/printer.h`
+- 출력 함수 선언
+
+### `include/utils.h`
+- 문자열 보조 함수 선언
+
+### `include/types.h`
+- 구조체와 enum 선언
+
+### `include/constants.h`
+- 경로, 길이 제한, 컬럼 개수 같은 상수 선언
+
+## 파일 간 호출 흐름
+```text
+main.c
+  -> repl.c
+      -> parser.c
+      -> executor.c
+          -> storage.c
+          -> printer.c
+      -> utils.c
+```
+
+## 1차 구현 기준 세부 규칙
+- 입력은 한 줄당 MiniSQL 문장 1개만 허용한다.
+- 키워드는 대소문자를 구분하지 않는다.
+- 세미콜론이 없으면 오류로 처리한다.
+- 공백은 유연하게 허용한다.
+- `INSERT`는 값 6개가 정확히 들어와야 한다.
+- 숫자는 따옴표 없이 입력한다.
+- 문자열은 작은따옴표 또는 큰따옴표로 감쌀 수 있다.
+- 문자열의 시작과 끝은 같은 종류의 따옴표여야 한다.
+- 문자열 내부 같은 종류의 따옴표는 1차 구현에서 지원하지 않는다.
+- 빈 문자열을 허용한다.
+- 문자열 내부 줄바꿈은 1차 구현에서 지원하지 않는다.
+- `SELECT`는 `SELECT * FROM users;`만 허용한다.
+- `WHERE`는 1개 조건만 허용한다.
+- 1차 구현의 조건 비교는 `id = 값`부터 우선 지원한다.
+- CSV 저장 시 문자열 컬럼은 항상 큰따옴표로 저장한다.
+- CSV 저장 시 숫자 컬럼은 따옴표 없이 저장한다.
+- 지원하지 않는 문장은 `CMD_INVALID`로 처리한다.
+- 빈 줄 입력은 조용히 무시한다.
+- 파싱 오류 시 오류 메시지를 출력하고 프롬프트를 유지한다.
+- `exit`, `quit` 입력 시 종료한다.
+- EOF(`Ctrl + D`) 입력 시 조용히 종료한다.
+
+## 구현 순서 추천
+1. `constants.h`, `types.h`부터 만든다.
+2. `main.c`에서 `run_repl()` 호출 구조를 만든다.
+3. `repl.c`에 프롬프트 루프를 만든다.
+4. `parser.c`에서 `INSERT`, `SELECT`를 구분한다.
+5. `storage.c`에서 CSV append/read를 만든다.
+6. `executor.c`에서 파서와 저장소를 연결한다.
+7. `printer.c`로 출력 형식을 정리한다.
+8. `utils.c`로 문자열 처리 중복을 제거한다.
+
+## 구현 완료 후 확인할 것
+- `MiniSQL> ` 프롬프트가 반복 출력되는가
+- `exit` 입력 시 종료되는가
+- `quit` 입력 시 종료되는가
+- INSERT 후 `data/users.csv`에 행이 추가되는가
+- SELECT 시 전체 행이 출력되는가
+- `WHERE id = 1` 조건이 동작하는가
+- 오류 입력 후에도 프로그램이 계속 실행되는가
