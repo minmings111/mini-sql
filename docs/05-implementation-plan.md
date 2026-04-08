@@ -9,6 +9,7 @@
 - `MiniSQL> ` 프롬프트 기반 인터랙티브 입력 루프를 만든다.
 - 하드코딩된 `users` 테이블 하나를 기준으로 동작한다.
 - `data/users.csv`에 데이터를 저장하고 읽는다.
+- `WHERE id = 값` 조회용 B-tree 인덱스를 유지한다.
 - `INSERT`를 파싱하고 저장한다.
 - `SELECT`를 파싱하고 출력한다.
 - 가능하면 `WHERE col = value` 1개 조건을 지원한다.
@@ -36,9 +37,10 @@ SELECT * FROM users WHERE id = 1;
 4. `users` 테이블 컬럼 구조를 코드와 문서에 고정한다.
 5. MiniSQL 파서를 구현한다.
 6. `data/users.csv` 기준 파일 입출력 코드를 만든다.
-7. `INSERT` 실행기를 만든다.
-8. `SELECT` 실행기를 만든다.
-9. `exit`, 빈 줄, 잘못된 입력 처리 규칙을 정리한다.
+7. `id` 기준 B-tree 인덱스를 만든다.
+8. `INSERT` 실행기를 만든다.
+9. `SELECT` 실행기를 만든다.
+10. `exit`, 빈 줄, 잘못된 입력 처리 규칙을 정리한다.
 
 세부 파일 구조와 함수 목록은 [파일 구조와 함수 설계](/home/leeminjeong/workspace/c_project/my_study/docs/07-file-structure-and-functions.md) 문서를 기준으로 한다.
 
@@ -65,6 +67,7 @@ SELECT * FROM users WHERE id = 1;
 ## 현재 확정된 사항
 - 데이터 저장 포맷은 CSV이다.
 - 데이터 파일 경로는 `data/users.csv`이다.
+- `WHERE id = 값` 조회는 in-memory B-tree 인덱스를 사용한다.
 - `users` 테이블 컬럼 정의는 문서에 고정한다.
 - 출력은 CSV 스타일 텍스트로 보여준다.
 - 입력은 표준 SQL 전체가 아니라 과제용 MiniSQL 문장이다.
@@ -81,11 +84,14 @@ SELECT * FROM users WHERE id = 1;
 - 빈 문자열을 허용한다.
 - 문자열 컬럼은 CSV 저장 시 항상 큰따옴표로 저장한다.
 - 숫자 컬럼은 CSV 저장 시 따옴표 없이 저장한다.
+- 긴 입력 버퍼와 CSV row/field 일부는 동적 메모리로 관리한다.
 - `exit`, `quit`를 종료 명령으로 지원한다.
 - 빈 줄 입력은 조용히 무시한다.
 - 파싱 오류 시 오류 메시지를 출력하고 프롬프트를 유지한다.
 - EOF(`Ctrl + D`) 입력 시 조용히 종료한다.
 - 오류 메시지는 문법 오류, 지원 범위 오류, 값/타입 오류, 파일 입출력 오류로 구분한다.
+- 중복 `id`는 `duplicate id` 오류로 처리한다.
+- 메모리 할당 실패는 `out of memory` 오류로 처리한다.
 - INSERT 성공 시 `Inserted 1 row`를 출력한다.
 - SELECT 결과가 없으면 `No rows found`를 출력한다.
 

@@ -8,22 +8,22 @@
 
 - 함수 안에 선언한 변수는 어디에 저장되는가?
 - 전역 상수나 문자열은 어디에 있는가?
-- `malloc()`을 안 쓰고도 프로그램이 돌아가는 이유는 무엇인가?
+- `malloc()`을 어디에서 쓰고, 왜 `free()`가 필요한가?
 
 ## 아주 짧게 요약
 - `stack`: 함수가 실행될 때 잠깐 생기는 지역 변수 공간
 - `heap`: 필요할 때 직접 동적 할당해서 쓰는 공간
 - `static memory`: 프로그램 시작부터 끝까지 유지되는 전역 데이터나 문자열, 정적 데이터 영역
 
-이 프로젝트는 1차 구현 기준으로 `heap`을 거의 쓰지 않고, 주로 `stack`과 `static memory`를 사용한다.
+현재 프로젝트는 여전히 `stack`과 `static memory`를 많이 사용하지만, 긴 입력 버퍼와 CSV row/field 저장에는 `heap`도 부분적으로 사용한다.
 
 ## 1. Stack이란?
 Stack은 보통 함수가 호출될 때 만들어지는 지역 변수 공간이라고 이해하면 된다.
 
 예를 들어 [repl.c](/home/leeminjeong/workspace/c_project/my_study/src/repl.c)의 `run_repl()` 안에는 이런 변수가 있다.
 
-- `char line[MAX_INPUT_LEN];`
-- `char buffer[MAX_INPUT_LEN];`
+- `char *line;`
+- `char *buffer;`
 - `int collecting = 0;`
 
 이런 변수들은 `run_repl()` 함수가 실행되는 동안 stack에 놓인다.
@@ -46,19 +46,16 @@ Stack은 보통 함수가 호출될 때 만들어지는 지역 변수 공간이�
 - `command`, `parse_status`, `exec_status` 같은 지역 변수
 
 ### [executor.c](/home/leeminjeong/workspace/c_project/my_study/src/executor.c)
-- `rows`
-- `row_count`
+- `row_array`
 - `matched_count`
 - `values`
-- `FILE *fp`
 
 ### [storage.c](/home/leeminjeong/workspace/c_project/my_study/src/storage.c)
 - `buffer`
-- `count`
 - `column`
-- `index`
+- `row_offset`
 
-즉 이 프로젝트의 대부분의 작업용 데이터는 stack에 잠깐 만들어졌다가 함수가 끝나면 사라진다.
+즉 지역 변수 자체는 stack에 놓이지만, 그 지역 변수가 가리키는 동적 메모리는 heap에 있을 수 있다.
 
 ## 3. Heap이란?
 Heap은 프로그램이 실행 중에 필요할 때 직접 메모리를 요청해서 쓰는 공간이다.
@@ -90,29 +87,40 @@ free(name);
 
 으로 해제해야 한다.
 
-## 4. 그런데 우리 프로젝트는 왜 heap을 거의 안 쓰나?
-이 프로젝트는 1차 구현에서 구조를 단순하게 가져가기 위해, 크기가 미리 정해진 배열을 많이 사용한다.
+## 4. 이 프로젝트에서 heap은 어디에 쓰이나?
+이번 버전에서는 아래처럼 heap이 실제로 사용된다.
+
+- [repl.c](/home/leeminjeong/workspace/c_project/my_study/src/repl.c)
+  - `read_input_line()`이 긴 입력 문자열을 `malloc`/`realloc`으로 읽는다.
+  - `append_input_line()`이 여러 줄 입력 버퍼를 `realloc`으로 늘린다.
+- [parser.c](/home/leeminjeong/workspace/c_project/my_study/src/parser.c)
+  - 각 값 문자열을 `malloc`으로 복사해서 `Command` 구조체에 넣는다.
+- [storage.c](/home/leeminjeong/workspace/c_project/my_study/src/storage.c)
+  - CSV 전체 조회 시 row 배열과 각 row 문자열을 동적으로 저장한다.
+  - `split_csv_row()`가 각 칼럼 문자열을 동적으로 만든다.
 
 예:
 
-- `char line[MAX_INPUT_LEN];`
-- `char rows[MAX_INPUT_LEN][MAX_INPUT_LEN];`
-- `char values[USER_COLUMN_COUNT][128];`
+```c
+char *line;
+char *buffer;
+char *values[USER_COLUMN_COUNT];
+```
 
-즉 "필요한 최대 크기를 미리 정해놓고 stack 배열로 처리"하는 방식이다.
+즉 이번 버전은 "구조는 단순하게 유지하되, 길이가 가변적인 데이터만 heap으로 옮긴 상태"라고 볼 수 있다.
 
 장점:
 
-- `malloc()` / `free()`를 몰라도 구현 가능
-- 메모리 해제 실수 위험이 줄어듦
-- 초보자가 읽기 쉬움
+- 긴 입력을 유연하게 받을 수 있다.
+- CSV row 수가 늘어나도 필요한 만큼만 메모리를 사용한다.
+- 문자열 길이만큼만 메모리를 쓸 수 있다.
 
 단점:
 
-- 최대 크기를 넘는 큰 입력은 유연하게 처리하기 어려움
-- 메모리를 더 똑똑하게 쓰는 구조는 아님
+- `malloc`, `realloc`, `free`를 신경 써야 한다.
+- 메모리 해제를 빼먹으면 누수가 생긴다.
 
-그래서 지금 프로젝트는 학습용 1차 구현에 맞게 `heap 없이도 동작하도록 단순화`된 설계라고 보면 된다.
+그래서 지금 프로젝트는 "완전 동적 메모리 중심"까지는 아니지만, 필요한 부분에는 heap을 도입한 절충형 설계이다.
 
 ## 5. Static memory란?
 Static memory는 프로그램이 시작될 때부터 끝날 때까지 유지되는 데이터 영역이라고 생각하면 된다.
@@ -148,13 +156,14 @@ Static memory는 프로그램이 시작될 때부터 끝날 때까지 유지되�
 예를 들어:
 
 ```c
-char line[MAX_INPUT_LEN];
+char *line;
 puts("Inserted 1 row");
 ```
 
 이 경우:
 
-- `line`은 함수 안 지역 변수이므로 stack
+- `line` 변수 자체는 함수 안 지역 변수이므로 stack
+- 하지만 `line`이 가리키는 실제 문자열 메모리는 heap에 있을 수 있다
 - `"Inserted 1 row"`는 코드에 박혀 있는 문자열 리터럴이므로 static memory
 
 같은 코드 안에 있어도 저장되는 메모리 영역이 다르다.
@@ -167,7 +176,7 @@ puts("Inserted 1 row");
 
 단, 파일을 읽는 순간:
 
-- 한 줄이 `buffer` 같은 배열에 들어오면 stack으로 올라오고
+- 한 줄이 `buffer` 같은 동적 메모리 공간으로 올라오면 heap/RAM에 올라오고
 - CPU는 그 stack 데이터를 처리한다.
 
 즉:
@@ -193,14 +202,16 @@ puts("Inserted 1 row");
 
 그래서 어떤 함수 안의 지역 배열 주소를 바깥에서 오래 들고 있으면 위험할 수 있다.
 
-이 프로젝트에서는 그런 위험한 패턴을 피하기 위해:
+이 프로젝트에서는 그런 위험한 패턴을 줄이기 위해:
 
-- 구조체를 값처럼 넘기거나
-- 호출 중에만 쓸 배열을 지역 변수로 두고
-- 파일 저장 전에는 필요한 값을 복사해 사용하는 편이다.
+- `free_command()`
+- `free_row_array()`
+- `free_csv_values()`
 
-## 10. 왜 heap을 아직 안 쓰는 게 좋은 선택인가?
-너처럼 C를 이제 막 배우는 단계에서는 heap까지 한 번에 들어오면 난이도가 훨씬 올라간다.
+같은 정리 함수를 따로 두고 사용이 끝난 동적 메모리를 해제한다.
+
+## 10. 왜 heap을 부분적으로만 쓰는가?
+너처럼 C를 이제 막 배우는 단계에서는 모든 데이터를 heap으로 바꾸면 난이도가 너무 급격하게 올라간다.
 
 왜냐하면 heap을 쓰기 시작하면:
 
@@ -214,24 +225,23 @@ puts("Inserted 1 row");
 
 그래서 지금 프로젝트는:
 
-- 먼저 흐름 이해
-- 파싱과 실행 이해
-- 파일 입출력 이해
+- 전체 구조는 유지하고
+- 긴 입력, CSV row, 문자열 값처럼 꼭 필요한 부분만 heap으로 옮긴
 
-를 우선하고, 메모리 관리 난이도는 일부러 낮춘 구조라고 볼 수 있다.
+중간 단계 설계라고 볼 수 있다.
 
-## 11. 나중에 heap을 쓰게 된다면 어디가 바뀔까?
-나중에 확장하면 이런 부분에서 heap이 등장할 수 있다.
+## 11. 나중에 heap을 더 쓰게 된다면 어디가 바뀔까?
+지금보다 더 확장하면 이런 부분이 추가로 heap 중심으로 바뀔 수 있다.
 
 - 매우 긴 입력 문자열 동적 확장
 - 행 개수를 모를 때 동적 배열 사용
 - 여러 테이블을 위한 유연한 스키마 구조
 - CSV 컬럼 값을 동적으로 저장
 
-즉 지금은 고정 배열 기반이지만, 나중에 더 큰 프로그램으로 가면 heap을 도입할 가능성이 높다.
+즉 지금은 "부분적 heap 도입" 상태이고, 나중에 더 큰 프로그램으로 가면 heap 비중이 더 커질 수 있다.
 
 ## 12. 이 프로젝트를 메모리 관점에서 한 문장으로 말하면
-이 프로젝트는 실행 중 필요한 대부분의 데이터를 stack의 고정 배열로 처리하고, 고정 문자열은 static memory에 두며, 영구 데이터는 SSD/HDD의 CSV 파일에 저장하는 단순한 구조의 MiniSQL 처리기이다.
+이 프로젝트는 지역 변수와 제어 흐름은 stack으로 처리하고, 긴 입력과 CSV row/field 같은 가변 데이터는 heap으로 관리하며, 고정 문자열은 static memory에 두고, 영구 데이터는 SSD/HDD의 CSV 파일에 저장하는 MiniSQL 처리기이다.
 
 ## 13. 발표 때 이렇게 설명해도 좋다
-"현재 구현은 초보자 학습과 최소 구현을 우선했기 때문에, 동적 메모리 할당보다는 stack 기반 고정 배열을 많이 사용했습니다. 그래서 메모리 관리가 단순하고 코드 흐름을 읽기 쉽습니다. 반면 실제 사용자 데이터는 RAM이 아니라 CSV 파일로 디스크에 저장되므로 프로그램 종료 후에도 유지됩니다."
+"현재 구현은 구조를 단순하게 유지하면서도 긴 입력과 CSV 데이터 처리를 위해 필요한 곳에는 `malloc`과 `realloc`을 도입했습니다. 즉 제어 흐름은 여전히 읽기 쉽게 유지하되, 가변 길이 데이터는 heap으로 관리하는 절충형 구조입니다."

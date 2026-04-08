@@ -18,7 +18,8 @@ typedef enum {
     PARSE_INVALID_SELECT,
     PARSE_INVALID_WHERE,
     PARSE_UNTERMINATED_STRING,
-    PARSE_UNSUPPORTED_QUOTED_FORMAT
+    PARSE_UNSUPPORTED_QUOTED_FORMAT,
+    PARSE_OUT_OF_MEMORY
 } ParseStatus;
 
 typedef enum {
@@ -29,26 +30,28 @@ typedef enum {
     EXEC_INSERT_VALUE_COUNT_MISMATCH,
     EXEC_INVALID_ID,
     EXEC_INVALID_AGE,
+    EXEC_DUPLICATE_ID,
     EXEC_DATA_FILE_NOT_FOUND,
     EXEC_READ_FAILED,
     EXEC_WRITE_FAILED,
+    EXEC_MEMORY_ERROR,
     EXEC_NO_ROWS_FOUND
 } ExecStatus;
 
 typedef struct {
-    char column[32];
-    char value[128];
+    char column[IDENTIFIER_LEN];
+    char *value;
     int has_condition;
 } Condition;
 
 typedef struct {
-    char table[32];
-    char values[USER_COLUMN_COUNT][128];
+    char table[IDENTIFIER_LEN];
+    char *values[MAX_VALUE_COUNT];
     int value_count;
 } InsertCommand;
 
 typedef struct {
-    char table[32];
+    char table[IDENTIFIER_LEN];
     Condition condition;
 } SelectCommand;
 

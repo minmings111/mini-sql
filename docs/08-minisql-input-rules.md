@@ -119,6 +119,7 @@ MiniSQL>
 - `Error: invalid WHERE syntax`
 - `Error: unterminated string literal`
 - `Error: unsupported quoted string format`
+- `Error: out of memory`
 
 ### 지원 범위 오류
 - `Error: unsupported table`
@@ -129,6 +130,7 @@ MiniSQL>
 - `Error: INSERT expects 6 values`
 - `Error: invalid numeric value for id`
 - `Error: invalid numeric value for age`
+- `Error: duplicate id`
 
 ### 파일 입출력 오류
 - `Error: data file not found`

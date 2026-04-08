@@ -10,7 +10,8 @@ my_study/
 ├── README.md
 ├── Makefile
 ├── data/
-│   └── users.csv
+│   ├── users.csv
+│   └── users.idx
 ├── docs/
 │   ├── 01-project-overview.md
 │   ├── 02-sql-basics.md
@@ -25,6 +26,7 @@ my_study/
 │   ├── repl.h
 │   ├── parser.h
 │   ├── executor.h
+│   ├── btree.h
 │   ├── storage.h
 │   ├── printer.h
 │   └── utils.h
@@ -33,6 +35,7 @@ my_study/
     ├── repl.c
     ├── parser.c
     ├── executor.c
+    ├── btree.c
     ├── storage.c
     ├── printer.c
     └── utils.c
@@ -64,6 +67,8 @@ my_study/
   - 값: `6`
 - `USER_COLUMN_COUNT`
   - 값: `6`
+- `INITIAL_BUFFER_CAPACITY`
+  - 예: `128`
 
 ## 핵심 구조체
 `types.h`에는 아래 구조체와 enum을 둔다.
@@ -76,12 +81,12 @@ my_study/
 
 ### `Condition`
 - `char column[32]`
-- `char value[128]`
+- `char *value`
 - `int has_condition`
 
 ### `InsertCommand`
 - `char table[32]`
-- `char values[USER_COLUMN_COUNT][128]`
+- `char *values[MAX_VALUE_COUNT]`
 - `int value_count`
 
 ### `SelectCommand`
@@ -102,6 +107,7 @@ my_study/
 - `PARSE_INVALID_WHERE`
 - `PARSE_UNTERMINATED_STRING`
 - `PARSE_UNSUPPORTED_QUOTED_FORMAT`
+- `PARSE_OUT_OF_MEMORY`
 
 ### `ExecStatus`
 - `EXEC_OK`
@@ -111,9 +117,11 @@ my_study/
 - `EXEC_INSERT_VALUE_COUNT_MISMATCH`
 - `EXEC_INVALID_ID`
 - `EXEC_INVALID_AGE`
+- `EXEC_DUPLICATE_ID`
 - `EXEC_DATA_FILE_NOT_FOUND`
 - `EXEC_READ_FAILED`
 - `EXEC_WRITE_FAILED`
+- `EXEC_MEMORY_ERROR`
 - `EXEC_NO_ROWS_FOUND`
 
 ## 파일별 함수 설계
@@ -148,6 +156,8 @@ my_study/
   - `exit`, `quit` 여부 확인
 - `int has_complete_statement(const char *buffer);`
   - 세미콜론 기준으로 문장 완료 여부 판단
+- `int read_input_line(char **line_out);`
+  - 동적 버퍼로 한 줄 입력 읽기
 
 ### `src/parser.c`
 역할:
@@ -166,12 +176,15 @@ my_study/
   - WHERE 절 파싱
 - `void init_command(Command *command);`
   - 구조체 초기화
+- `void free_command(Command *command);`
+  - 동적으로 할당한 값 문자열 해제
 
 ### `src/executor.c`
 역할:
 - 파싱된 명령을 실제 동작으로 연결
 - `INSERT`와 `SELECT` 분기 처리
 - 값/타입 오류와 파일 관련 오류 처리
+- `id` 기반 B-tree 인덱스 경로와 전체 스캔 경로를 분기 처리
 
 필요 함수:
 - `ExecStatus execute_command(const Command *command);`
@@ -186,18 +199,39 @@ my_study/
 - `data/users.csv` 파일 읽기/쓰기
 - CSV quoting 규칙에 맞는 한 줄 append
 - 전체 데이터 순회
+- 메모리 B-tree 인덱스 구성 및 조회
+- 동적 row / field 메모리 관리
 
 필요 함수:
 - `int append_user_record(const InsertCommand *insert_cmd);`
   - CSV 끝에 한 줄 추가
-- `int read_all_users(char rows[][MAX_INPUT_LEN], int *row_count);`
-  - 전체 행을 메모리로 읽기
-- `int split_csv_row(const char *row, char values[USER_COLUMN_COUNT][128]);`
+- `int read_all_users(RowArray *row_array);`
+  - 전체 행을 동적 배열로 읽기
+- `int read_user_row_by_id(int id, char **row_out);`
+  - B-tree로 파일 오프셋을 찾아 한 줄만 읽기
+- `int user_id_exists(int id);`
+  - B-tree에 같은 id가 이미 있는지 확인
+- `int split_csv_row(const char *row, char *values[USER_COLUMN_COUNT]);`
   - CSV 한 줄을 큰따옴표 규칙을 고려해 컬럼별로 분리
-- `int row_matches_condition(const char values[USER_COLUMN_COUNT][128], const Condition *condition);`
+- `int row_matches_condition(char *const values[USER_COLUMN_COUNT], const Condition *condition);`
   - WHERE 조건 일치 여부 확인
 - `void write_csv_field(FILE *fp, const char *value, int quote);`
   - 문자열 컬럼이면 큰따옴표를 붙여 CSV 필드 저장
+- `void free_row_array(RowArray *row_array);`
+  - 동적으로 읽은 행 배열 해제
+- `void free_csv_values(char *values[USER_COLUMN_COUNT]);`
+  - split된 컬럼 문자열 해제
+
+### `src/btree.c`
+역할:
+- `id -> CSV 파일 오프셋` 매핑용 B-tree 구현
+- 검색과 삽입을 담당
+
+필요 함수:
+- `void btree_init(BTreeIndex *tree);`
+- `void btree_free(BTreeIndex *tree);`
+- `int btree_search(const BTreeIndex *tree, int key, long *value_out);`
+- `int btree_insert(BTreeIndex *tree, int key, long value);`
 
 ### `src/printer.c`
 역할:
@@ -205,7 +239,7 @@ my_study/
 - 성공/오류 메시지 출력 담당
 
 필요 함수:
-- `void print_user_row(const char values[USER_COLUMN_COUNT][128]);`
+- `void print_user_row(char *const values[USER_COLUMN_COUNT]);`
   - 사용자 한 행 출력
 - `void print_select_header(void);`
   - 컬럼명 출력 여부를 통제
@@ -247,6 +281,9 @@ my_study/
 ### `include/printer.h`
 - 출력 함수 선언
 
+### `include/btree.h`
+- B-tree 자료구조와 함수 선언
+
 ### `include/utils.h`
 - 문자열 보조 함수 선언
 
@@ -263,6 +300,7 @@ main.c
       -> parser.c
       -> executor.c
           -> storage.c
+              -> btree.c
           -> printer.c
       -> utils.c
 ```
@@ -284,6 +322,8 @@ main.c
 - 1차 구현의 조건 비교는 `id = 값`부터 우선 지원한다.
 - CSV 저장 시 문자열 컬럼은 항상 큰따옴표로 저장한다.
 - CSV 저장 시 숫자 컬럼은 따옴표 없이 저장한다.
+- 긴 입력 버퍼와 일부 CSV 메모리는 `malloc`, `realloc`, `free`로 관리한다.
+- `WHERE id = 값` 조회는 메모리 B-tree 인덱스를 사용한다.
 - 지원하지 않는 문장은 `CMD_INVALID`로 처리한다.
 - 빈 줄 입력은 조용히 무시한다.
 - 파싱 오류 시 오류 메시지를 출력하고 프롬프트를 유지한다.
@@ -292,6 +332,7 @@ main.c
 - 오류 메시지는 문법 오류, 지원 범위 오류, 값/타입 오류, 파일 입출력 오류로 구분한다.
 - INSERT 성공 시 `Inserted 1 row`를 출력한다.
 - SELECT 결과가 없으면 `No rows found`를 출력한다.
+- 중복 `id`는 오류로 처리한다.
 
 ## 구현 순서 추천
 1. `constants.h`, `types.h`부터 만든다.

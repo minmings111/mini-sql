@@ -12,6 +12,7 @@
 6. [파일 확장자와 빌드 산출물 이해하기](/home/leeminjeong/workspace/c_project/my_study/study_docs/06-file-extensions-explained.md)
 7. [MiniSQL을 CPU / RAM / SSD 관점에서 이해하기](/home/leeminjeong/workspace/c_project/my_study/study_docs/07-minisql-and-computer-hardware.md)
 8. [Stack / Heap / Static Memory를 이 프로젝트로 이해하기](/home/leeminjeong/workspace/c_project/my_study/study_docs/08-stack-heap-static-memory.md)
+9. [B-tree를 우리 MiniSQL 프로젝트로 이해하기](/home/leeminjeong/workspace/c_project/my_study/study_docs/09-btree-and-minisql.md)
 
 ## 이 문서들의 목표
 - 이 프로젝트가 어떤 단계로 움직이는지 이해하기
