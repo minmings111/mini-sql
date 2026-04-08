@@ -12,6 +12,7 @@
 6. [하드코딩 테이블 정의](/home/leeminjeong/workspace/c_project/my_study/docs/06-users-table.md)
 7. [파일 구조와 함수 설계](/home/leeminjeong/workspace/c_project/my_study/docs/07-file-structure-and-functions.md)
 8. [MiniSQL 입력 규칙](/home/leeminjeong/workspace/c_project/my_study/docs/08-minisql-input-rules.md)
+9. [지원/미지원 문법 요약](/home/leeminjeong/workspace/c_project/my_study/docs/09-supported-grammar.md)
 
 ## 읽는 순서 추천
 1. 과제 범위를 먼저 확인한다.
@@ -21,4 +22,5 @@
 5. 하드코딩된 테이블 구조를 확인한다.
 6. 실제 파일 구조와 함수 책임을 확인한다.
 7. MiniSQL 입력 규칙을 확정한다.
-8. 최종 구현 순서를 정리한다.
+8. 지원/미지원 문법 경계를 확인한다.
+9. 최종 구현 순서를 정리한다.

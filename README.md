@@ -13,6 +13,7 @@
 - [하드코딩 테이블 정의](/home/leeminjeong/workspace/c_project/my_study/docs/06-users-table.md)
 - [파일 구조와 함수 설계](/home/leeminjeong/workspace/c_project/my_study/docs/07-file-structure-and-functions.md)
 - [MiniSQL 입력 규칙](/home/leeminjeong/workspace/c_project/my_study/docs/08-minisql-input-rules.md)
+- [지원/미지원 문법 요약](/home/leeminjeong/workspace/c_project/my_study/docs/09-supported-grammar.md)
 
 ## 현재 방향
 - 최소 구현을 우선한다.
