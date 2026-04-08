@@ -56,6 +56,8 @@ my_study/
   - 값: `"data/users.csv"`
 - `PROMPT_TEXT`
   - 값: `"MiniSQL> "`
+- `CONTINUATION_PROMPT`
+  - 값: `"...> "`
 - `MAX_INPUT_LEN`
   - 예: `1024`
 - `MAX_VALUE_COUNT`
@@ -91,6 +93,29 @@ my_study/
 - `InsertCommand insert_cmd`
 - `SelectCommand select_cmd`
 
+### `ParseStatus`
+- `PARSE_OK`
+- `PARSE_MISSING_SEMICOLON`
+- `PARSE_UNSUPPORTED_COMMAND`
+- `PARSE_INVALID_INSERT`
+- `PARSE_INVALID_SELECT`
+- `PARSE_INVALID_WHERE`
+- `PARSE_UNTERMINATED_STRING`
+- `PARSE_UNSUPPORTED_QUOTED_FORMAT`
+
+### `ExecStatus`
+- `EXEC_OK`
+- `EXEC_UNSUPPORTED_TABLE`
+- `EXEC_UNSUPPORTED_SELECT_COLUMNS`
+- `EXEC_UNSUPPORTED_WHERE_CONDITION`
+- `EXEC_INSERT_VALUE_COUNT_MISMATCH`
+- `EXEC_INVALID_ID`
+- `EXEC_INVALID_AGE`
+- `EXEC_DATA_FILE_NOT_FOUND`
+- `EXEC_READ_FAILED`
+- `EXEC_WRITE_FAILED`
+- `EXEC_NO_ROWS_FOUND`
+
 ## 파일별 함수 설계
 ### `src/main.c`
 역할:
@@ -107,6 +132,7 @@ my_study/
 역할:
 - `MiniSQL> ` 프롬프트 출력
 - 반복 입력 루프 실행
+- 세미콜론이 나올 때까지 여러 줄 입력 누적
 - 빈 줄 무시
 - `exit`, `quit`, EOF 처리
 - 파서와 실행기 연결
@@ -120,21 +146,23 @@ my_study/
   - 성공/실패에 따라 메시지 출력
 - `int is_exit_command(const char *line);`
   - `exit`, `quit` 여부 확인
+- `int has_complete_statement(const char *buffer);`
+  - 세미콜론 기준으로 문장 완료 여부 판단
 
 ### `src/parser.c`
 역할:
 - MiniSQL 문자열을 내부 `Command` 구조체로 변환
-- `INSERT`, `SELECT`, `exit`, `quit` 구분
+- `INSERT`, `SELECT` 구분
 - 문법 오류와 일부 지원 범위 오류 판정
 
 필요 함수:
-- `int parse_command(const char *input, Command *command);`
+- `ParseStatus parse_command(const char *input, Command *command);`
   - 입력 문자열 전체를 파싱
-- `int parse_insert(const char *input, Command *command);`
+- `ParseStatus parse_insert(const char *input, Command *command);`
   - INSERT 문장 파싱
-- `int parse_select(const char *input, Command *command);`
+- `ParseStatus parse_select(const char *input, Command *command);`
   - SELECT 문장 파싱
-- `int parse_condition(const char *input, Condition *condition);`
+- `ParseStatus parse_condition(const char *input, Condition *condition);`
   - WHERE 절 파싱
 - `void init_command(Command *command);`
   - 구조체 초기화
@@ -146,11 +174,11 @@ my_study/
 - 값/타입 오류와 파일 관련 오류 처리
 
 필요 함수:
-- `int execute_command(const Command *command);`
+- `ExecStatus execute_command(const Command *command);`
   - 명령 종류에 따라 분기
-- `int execute_insert(const InsertCommand *insert_cmd);`
+- `ExecStatus execute_insert(const InsertCommand *insert_cmd);`
   - 저장소에 새 레코드 추가
-- `int execute_select(const SelectCommand *select_cmd);`
+- `ExecStatus execute_select(const SelectCommand *select_cmd);`
   - 저장소 조회 후 출력
 
 ### `src/storage.c`
@@ -199,6 +227,9 @@ my_study/
 - `void strip_matching_quotes(char *str);`
 - `int starts_with_ignore_case(const char *str, const char *prefix);`
 - `int is_quoted_string(const char *str);`
+- `int is_blank_string(const char *str);`
+- `int is_integer_string(const char *str);`
+- `size_t copy_trimmed(char *dest, size_t dest_size, const char *src);`
 
 ## 헤더 파일 역할
 ### `include/repl.h`
@@ -237,9 +268,9 @@ main.c
 ```
 
 ## 1차 구현 기준 세부 규칙
-- 입력은 한 줄당 MiniSQL 문장 1개만 허용한다.
+- MiniSQL 문장은 세미콜론이 나올 때까지 여러 줄로 입력할 수 있다.
 - 키워드는 대소문자를 구분하지 않는다.
-- 세미콜론이 없으면 오류로 처리한다.
+- 세미콜론이 나올 때까지 REPL은 입력을 계속 누적한다.
 - 공백은 유연하게 허용한다.
 - `INSERT`는 값 6개가 정확히 들어와야 한다.
 - 숫자는 따옴표 없이 입력한다.

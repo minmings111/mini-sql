@@ -47,7 +47,10 @@ SELECT * FROM users WHERE id = 1;
 $ ./sql_processor
 MiniSQL> SELECT * FROM users;
 MiniSQL> SELECT * FROM users WHERE id = 1;
-MiniSQL> INSERT INTO users VALUES (13, 'hong13', 'Hong', 26, '010-1313-1414', 'hong@example.com');
+MiniSQL> INSERT INTO users VALUES (
+...> 13, "hong13", "Hong",
+...> 26, "010-1313-1414", "hong@example.com"
+...> );
 MiniSQL> exit
 ```
 

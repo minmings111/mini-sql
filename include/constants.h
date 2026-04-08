@@ -3,6 +3,7 @@
 
 #define DATA_FILE_PATH "data/users.csv"
 #define PROMPT_TEXT "MiniSQL> "
+#define CONTINUATION_PROMPT "...> "
 #define MAX_INPUT_LEN 1024
 #define MAX_VALUE_COUNT 6
 #define USER_COLUMN_COUNT 6

@@ -3,8 +3,8 @@
 
 #include "types.h"
 
-int execute_command(const Command *command);
-int execute_insert(const InsertCommand *insert_cmd);
-int execute_select(const SelectCommand *select_cmd);
+ExecStatus execute_command(const Command *command);
+ExecStatus execute_insert(const InsertCommand *insert_cmd);
+ExecStatus execute_select(const SelectCommand *select_cmd);
 
 #endif

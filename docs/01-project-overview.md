@@ -45,18 +45,21 @@
 예:
 ```text
 $ ./sql_processor
+MiniSQL> INSERT INTO users VALUES (
+...> 13, "hong13", "Hong",
+...> 26, "010-1313-1414", "hong@example.com"
+...> );
 MiniSQL> SELECT * FROM users;
-MiniSQL> INSERT INTO users VALUES (13, 'hong13', 'Hong', 26, '010-1313-1414', 'hong@example.com');
 MiniSQL> exit
 ```
 
 ## 인터랙티브 입력 규칙
 - 프로그램은 시작 후 `MiniSQL> ` 프롬프트를 출력한다.
-- 사용자는 MiniSQL 문장을 한 줄에 하나씩 입력한다.
+- 사용자는 MiniSQL 문장을 한 줄씩 입력하고, 세미콜론이 나올 때까지 여러 줄로 이어서 입력할 수 있다.
+- 문장 누적 중에는 `...> ` 프롬프트를 출력한다.
 - 문장 끝에는 세미콜론 `;`을 붙인다.
 - `exit` 또는 `quit` 입력 시 프로그램을 종료한다.
 - 빈 줄은 무시하고 다시 입력을 받는다.
-- 1차 구현에서는 여러 줄에 걸친 문장 입력은 지원하지 않는다.
 
 ## 중요한 설계 질문
 이 프로젝트는 아래 질문에 대한 답을 먼저 정리해야 한다.
